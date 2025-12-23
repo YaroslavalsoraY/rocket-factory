@@ -1,0 +1,24 @@
+type: string
+enum: 
+  - UNKNOWN
+  - CARD
+  - SBP
+  - CREDIT_CARD
+  - INVESTOR_MONEY
+description: Метод оплаты
+x-enum-vars:
+  - name: UNKNOWN
+    value: 0
+    description: Неизвестный способ
+  - name: CARD
+    value: 1
+    description: Банковская карта
+  - name: SBP
+    value: 2
+    description: Система быстрых платежей
+  - name: CREDIT_CARD
+    value: 3
+    description: Кредитная карта
+  - name: INVESTOR_MONEY
+    value: 4
+    description: Деньги инвестора

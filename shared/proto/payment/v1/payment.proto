@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package payment.v1;
+
+option go_package = "github.com/YaroslavalsoraY/rocket-factory/shared/pkg/proto/payment/v1;payment_v1";
+
+service PaymentService {
+    // Позволяет оплатить заказ
+    rpc PayOrder (PayOrderRequest) returns (PayOrderResponse);
+}
+
+// Структура запроса PayOrder
+message PayOrderRequest {
+    // UUID заказа
+    string order_uuid = 1;
+    
+    // UUID пользователя
+    string user_uuid = 2;
+
+    // Способ оплаты
+    PaymentMethod payment_method = 3;
+}
+
+// Структура ответа PayOrder
+message PayOrderResponse {
+    // UUID транзакции
+    string transaction_uuid = 1;
+}
+
+// Способы оплаты заказов
+enum PaymentMethod {
+    // Неизвестная категория
+    PAYMENT_METHOD_UNKNOWN_UNSPECIFIED = 0;
+
+    // Двигатель
+    PAYMENT_METHOD_CARD = 1;
+
+    // Топливо
+    PAYMENT_METHOD_SBP = 2;
+
+    // Иллюминатор
+    PAYMENT_METHOD_CREDIT_CARD = 3;
+
+    // Крыло
+    PAYMENT_METHOD_INVESTOR_MONEY = 4;
+}
