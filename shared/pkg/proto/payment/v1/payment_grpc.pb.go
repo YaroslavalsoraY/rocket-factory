@@ -25,6 +25,8 @@ const (
 // PaymentServiceClient is the client API for PaymentService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// Сервис оплаты заказов
 type PaymentServiceClient interface {
 	// Позволяет оплатить заказ
 	PayOrder(ctx context.Context, in *PayOrderRequest, opts ...grpc.CallOption) (*PayOrderResponse, error)
@@ -51,6 +53,8 @@ func (c *paymentServiceClient) PayOrder(ctx context.Context, in *PayOrderRequest
 // PaymentServiceServer is the server API for PaymentService service.
 // All implementations must embed UnimplementedPaymentServiceServer
 // for forward compatibility.
+//
+// Сервис оплаты заказов
 type PaymentServiceServer interface {
 	// Позволяет оплатить заказ
 	PayOrder(context.Context, *PayOrderRequest) (*PayOrderResponse, error)

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -13,10 +14,14 @@ import (
 	"time"
 
 	order_v1 "shared/pkg/openapi/order/v1"
+	inventory_v1 "shared/pkg/proto/inventory/v1"
+	payment_v1 "shared/pkg/proto/payment/v1"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -29,6 +34,16 @@ const (
 	errorPaid      = "Order is already paid"
 	errorNoOrders  = "No orders were found"
 	errorCancelled = "Order was cancelled"
+)
+
+var (
+	paymentMethodValue = map[string]int32{
+		"PAYMENT_METHOD_UNKNOWN": 0,
+		"PAYMENT_METHOD_CARD": 1,
+		"PAYMENT_METHOD_SBP": 2,
+		"PAYMENT_METHOD_CREDIT_CARD": 3,
+		"PAYMENT_METHOD_INVESTOR_MONEY": 4,
+	}
 )
 
 type OrderStorage struct {
@@ -136,11 +151,48 @@ func (h *OrderHandler) CancelOrder(ctx context.Context, params order_v1.CancelOr
 
 func (h *OrderHandler) CreateNewOrder(ctx context.Context, req *order_v1.CreateOrderRequest) (order_v1.CreateNewOrderRes, error) {
 	orderUUID := uuid.New()
+
+	cc, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return &order_v1.InternalServerError{
+			Code: 500,
+			Message: "Internal error",
+		}, nil
+	}
+	defer cc.Close()
+
+	inv := inventory_v1.NewInventoryServiceClient(cc)
+
+	invReq := inventory_v1.ListPartsRequest {
+		Filter: &inventory_v1.PartsFilter{Uuids: make([]string, len(req.PartUuids))},
+	}
+
+	for i, el := range req.PartUuids {
+		invReq.Filter.Uuids[i] = el.String()
+	}
+
+	invResp, err := inv.ListParts(ctx, &invReq)
+
+	if len(invResp.Parts) != len(req.PartUuids) {
+		return &order_v1.NotFoundError{
+			Code: 404,
+			Message: "Parts was not found",
+		}, nil
+	}
+
+	var totalPrice float64
+	for _, el := range invResp.Parts {
+		totalPrice += el.Price
+	}
+
+	fmt.Println(totalPrice)
+
 	newOrder := order_v1.OrderDto{
 		OrderUUID: orderUUID,
 		UserUUID: req.UserUUID,
+		TotalPrice: totalPrice,
 		PartUuids: req.PartUuids,
-		PaymentMethod: order_v1.PaymentMethodUNKNOWN,
+		PaymentMethod: order_v1.PaymentMethodPAYMENTMETHODUNKNOWN,
 		Status: order_v1.OrderStatusPENDINGPAYMENT,
 	}
 
@@ -148,6 +200,7 @@ func (h *OrderHandler) CreateNewOrder(ctx context.Context, req *order_v1.CreateO
 
 	return &order_v1.CreateOrderResponse{
 		OrderUUID: orderUUID,
+		TotalPrice: float32(totalPrice),
 		}, nil
 }
 
@@ -164,20 +217,38 @@ func (h *OrderHandler) GetOrder(ctx context.Context, params order_v1.GetOrderPar
 	return order, nil
 }
 
-func (h *OrderHandler) PayOrder(ctx context.Context, req *order_v1.PayOrderRequest, params order_v1.PayOrderParams) (order_v1.PayOrderRes, error) {
-	transactionalUUID := uuid.New()
-	
-	err := h.storage.PayOrder(params.OrderUUID, req.GetPaymentMethod(), transactionalUUID)
-
-
-	if err != nil {
+func (h *OrderHandler) PayOrder(ctx context.Context, req *order_v1.PayOrderRequest, params order_v1.PayOrderParams) (order_v1.PayOrderRes, error) {	
+	order := h.storage.GetOrder(params.OrderUUID)
+	if order == nil {
 		return &order_v1.NotFoundError{
 			Code: 404,
-			Message: "Order was not found",
+			Message: errorNoOrders,
 		}, nil
 	}
+	
+	cc, err := grpc.NewClient("localhost:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return &order_v1.InternalServerError{
+			Code: 500,
+			Message: "Internal error",
+		}, nil
+	}
+	defer cc.Close()
+	
+	pay := payment_v1.NewPaymentServiceClient(cc)
 
-	return &order_v1.PayOrderResponse{TransactionUUID: transactionalUUID}, nil
+	payRes, err := pay.PayOrder(ctx,
+		&payment_v1.PayOrderRequest{
+			OrderUuid: params.OrderUUID.String(), 
+			UserUuid: order.UserUUID.String(), 
+			PaymentMethod: payment_v1.PaymentMethod(paymentMethodValue[string(req.PaymentMethod)])},
+		)
+
+	transaction_uuid, _ := uuid.Parse(payRes.GetTransactionUuid())
+	
+	err = h.storage.PayOrder(params.OrderUUID, req.GetPaymentMethod(), transaction_uuid)
+
+	return &order_v1.PayOrderResponse{TransactionUUID: transaction_uuid}, nil
 }
 
 func (h *OrderHandler) NewError(ctx context.Context, err error) *order_v1.GenericErrorStatusCode {

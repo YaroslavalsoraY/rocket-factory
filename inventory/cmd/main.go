@@ -7,10 +7,12 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"path"
 	inventory_v1 "shared/pkg/proto/inventory/v1"
 	"slices"
 	"sync"
 	"syscall"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -58,16 +60,71 @@ func (inv *inventoryService) ListParts(ctx context.Context, req *inventory_v1.Li
 	}
 
 	for _, v := range inv.parts {
-		if (slices.Contains(req.GetFilter().GetUuids(), v.Uuid) || len(req.GetFilter().GetUuids()) == 0) && 
-		   (slices.Contains(req.GetFilter().GetNames(), v.Name) || len(req.GetFilter().GetNames()) == 0) && 
-		   (slices.Contains(req.GetFilter().GetCategories(), v.Category) || len(req.GetFilter().GetCategories()) == 0) && 
-		   (slices.Contains(req.GetFilter().GetManufacturerCountries(), v.Manufacturer.GetCountry()) || len(req.GetFilter().GetManufacturerCountries()) == 0) && 
-		   slices.Equal(req.GetFilter().GetTags(), v.Tags) {
+		if isInFilters(req.GetFilter(), v) {
 			result = append(result, v)
 		}
 	}
 
 	return &inventory_v1.ListPartsResponse{Parts: result}, nil
+}
+
+func isInFilters(filters *inventory_v1.PartsFilter, part *inventory_v1.Part) bool {
+	if  (slices.Contains(filters.GetUuids(), part.Uuid) || len(filters.GetUuids()) == 0) && 
+		(slices.Contains(filters.GetNames(), part.Name) || len(filters.GetNames()) == 0) && 
+		(slices.Contains(filters.GetCategories(), part.Category) || len(filters.GetCategories()) == 0) && 
+		(slices.Contains(filters.GetManufacturerCountries(), part.Manufacturer.GetCountry()) || len(filters.GetManufacturerCountries()) == 0) && 
+		isInTags(filters.GetTags(), part.Tags) {
+			return true
+		}
+	return false 
+}
+
+func isInTags(filterTags []string, partTags []string) bool {
+	if len(filterTags) == 0 {
+		return true
+	}
+	for _, filterTag := range partTags {
+		if !slices.Contains(partTags, filterTag) {
+			return false
+		}
+	}
+	return true 
+}
+
+// LoggerInterceptor создает серверный унарный интерцептор, который логирует
+// информацию о времени выполнения методов gRPC сервера.
+func LoggerInterceptor() grpc.UnaryServerInterceptor {
+	return func(
+		ctx context.Context,
+		req interface{},
+		info *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler,
+	) (interface{}, error) {
+		// Извлекаем имя метода из полного пути
+		method := path.Base(info.FullMethod)
+
+		// Логируем начало вызова метода
+		log.Printf("💨 Started gRPC method %s\n", method)
+
+		// Засекаем время начала выполнения
+		startTime := time.Now()
+
+		// Вызываем обработчик
+		resp, err := handler(ctx, req)
+
+		// Вычисляем длительность выполнения
+		duration := time.Since(startTime)
+
+		// Форматируем сообщение в зависимости от результата
+		if err != nil {
+			st, _ := status.FromError(err)
+			log.Printf("❌ Finished gRPC method %s with code %s: %v (took: %v)\n", method, st.Code(), err, duration)
+		} else {
+			log.Printf("✅ Finished gRPC method %s successfully (took: %v)\n", method, duration)
+		}
+
+		return resp, err
+	}
 }
 
 func main() {
@@ -82,10 +139,20 @@ func main() {
 		}
 	}()
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.UnaryInterceptor(LoggerInterceptor()))
 
 	service := &inventoryService{
 		parts: make(map[string]*inventory_v1.Part),
+	}
+
+	service.parts["123e4567-e89b-12d3-a456-426614174000"] = &inventory_v1.Part{
+		Uuid:          "123e4567-e89b-12d3-a456-426614174000",
+		Name:          "Тормозной диск передний",
+		Description:   "Высококачественный вентилируемый тормозной диск для передних колес",
+		Price:         12499.99,
+		StockQuantity: 25,
+		Category:      inventory_v1.Category_CATEGORY_PORTHOLE,
+		Tags:      []string{"тормоза", "диск", "передний", "вентилируемый"},
 	}
 
 	inventory_v1.RegisterInventoryServiceServer(s, service)
@@ -93,7 +160,7 @@ func main() {
 	reflection.Register(s)
 
 	go func() {
-		log.Printf("🚀 gRPC server listening on %d\n", grpcPort)
+		log.Printf("🚀 Inventory gRPC server listening on %d\n", grpcPort)
 		err = s.Serve(lis)
 		if err != nil {
 			log.Printf("failed to serve: %v\n", err)
@@ -104,7 +171,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("🛑 Shutting down gRPC server...")
+	log.Println("🛑 Shutting down inventory gRPC server...")
 	s.GracefulStop()
-	log.Println("✅ Server stopped")
+	log.Println("✅ Inventory server stopped")
 }

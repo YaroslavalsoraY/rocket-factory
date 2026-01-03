@@ -6,6 +6,7 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/YaroslavalsoraY/rocket-factory/shared/pkg/proto/inventory/v1;inventory_v1";
 
+// Сервис для обращения к складу деталей
 service InventoryService {
     // Возвращает информацию о детали по её UUID.
     rpc GetPart (GetPartRequest) returns (GetPartResponse);

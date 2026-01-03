@@ -4,6 +4,7 @@ package payment.v1;
 
 option go_package = "github.com/YaroslavalsoraY/rocket-factory/shared/pkg/proto/payment/v1;payment_v1";
 
+// Сервис оплаты заказов
 service PaymentService {
     // Позволяет оплатить заказ
     rpc PayOrder (PayOrderRequest) returns (PayOrderResponse);
