@@ -1,0 +1,32 @@
+package order
+
+import (
+	"context"
+	"order/internal/model"
+)
+
+func (s *Service) PayOrder(ctx context.Context, uuid string, paymentMethod model.PaymentMethod) (string, error) {
+	order, err := s.GetOrder(ctx, uuid)
+	if err != nil {
+		return "", err
+	}
+
+	transactionID, err := s.paymentClient.PayOrder(ctx, uuid, order.UserUUID, string(paymentMethod))
+	if err != nil {
+		return "", nil
+	}
+
+	status := model.OrderStatusPAID
+	newInfo := model.OrderUpdateInfo{
+		PaymentMethod: &paymentMethod,
+		Status: &status,
+	}
+
+	err = s.OrderRepository.UpdateOrder(ctx, newInfo, uuid)
+
+	if err != nil {
+		return "", err
+	}
+
+	return transactionID, nil
+}

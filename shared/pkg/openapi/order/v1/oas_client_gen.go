@@ -157,7 +157,7 @@ func (c *Client) sendCancelOrder(ctx context.Context, params CancelOrderParams) 
 			Explode: false,
 		})
 		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.OrderUUID))
+			return e.EncodeValue(conv.StringToString(params.OrderUUID))
 		}(); err != nil {
 			return res, errors.Wrap(err, "encode path")
 		}
@@ -323,7 +323,7 @@ func (c *Client) sendGetOrder(ctx context.Context, params GetOrderParams) (res G
 			Explode: false,
 		})
 		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.OrderUUID))
+			return e.EncodeValue(conv.StringToString(params.OrderUUID))
 		}(); err != nil {
 			return res, errors.Wrap(err, "encode path")
 		}
@@ -413,7 +413,7 @@ func (c *Client) sendPayOrder(ctx context.Context, request *PayOrderRequest, par
 			Explode: false,
 		})
 		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.OrderUUID))
+			return e.EncodeValue(conv.StringToString(params.OrderUUID))
 		}(); err != nil {
 			return res, errors.Wrap(err, "encode path")
 		}

@@ -10,19 +10,16 @@ required:
 properties:
   order_uuid:
     type: string
-    format: uuid
     description: UUID заказа
     example: "550e8400-e29b-41d4-a716-446655440000"
   user_uuid:
     type: string
-    format: uuid
     description: UUID создателя заказа
     example: "550e8400-e29b-41d4-a716-446655440000"
   part_uuids:
     type: array
     items:
       type: string
-      format: uuid
     description: UUID желаемых деталей
     example: ["550e8400-e29b-41d4-a716-446655440000", "f47ac10b-58cc-4372-a567-0e02b2c3d479"]
   total_price:
@@ -32,7 +29,6 @@ properties:
     example: 123.45
   transactional_uuid:
     type: string
-    format: uuid
     description: UUID транзакции
     example: "550e8400-e29b-41d4-a716-446655440000"
   payment_method:
