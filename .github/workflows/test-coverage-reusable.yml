@@ -44,6 +44,7 @@ jobs:
 
       - name: 📊 Extract coverage percent
         run: |
+          export GOTOOLDIR="$(go env GOROOT)/pkg/tool/linux_amd64"
           # Выводим последнюю строку с total и заменяем табы на пробелы
           COVERAGE_OUTPUT=$(go tool cover -func=${COVERAGE_DIR}/${COVERAGE_FILE} | tail -1)
           echo "Raw coverage output: $COVERAGE_OUTPUT"
