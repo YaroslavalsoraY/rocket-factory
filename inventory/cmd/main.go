@@ -3,21 +3,21 @@ package main
 import (
 	"context"
 	"fmt"
-	api "inventory/internal/api/inventory/v1"
-	repository "inventory/internal/repository/part"
-	service "inventory/internal/service/part"
 	"log"
 	"net"
 	"os"
 	"os/signal"
 	"path"
-	inventory_v1 "shared/pkg/proto/inventory/v1"
 	"syscall"
 	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
+	api "inventory/internal/api/inventory/v1"
+	repository "inventory/internal/repository/part"
+	service "inventory/internal/service/part"
+	inventory_v1 "shared/pkg/proto/inventory/v1"
 )
 
 const grpcPort = 50051
@@ -73,7 +73,7 @@ func main() {
 	repo := repository.NewInventory()
 	service := service.NewService(repo)
 	api := api.NewApi(service)
-	
+
 	inventory_v1.RegisterInventoryServiceServer(s, api)
 
 	reflection.Register(s)

@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+
 	"inventory/internal/converter"
 	inventory_v1 "shared/pkg/proto/inventory/v1"
 )

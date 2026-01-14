@@ -1,13 +1,14 @@
 package order
 
 import (
-	repoModel "order/internal/repository/model"
 	"sync"
+
+	repoModel "order/internal/repository/model"
 )
 
 type Repository struct {
 	storage map[string]repoModel.OrderInfo
-	mu sync.RWMutex
+	mu      sync.RWMutex
 }
 
 func NewRepository() *Repository {

@@ -6,24 +6,23 @@ import (
 	"log"
 	"net"
 	"net/http"
-	api "order/internal/api/order/v1"
-	inventoryClient "order/internal/client/grpc/inventory/v1"
-	paymentClient "order/internal/client/grpc/payment/v1"
-	repository "order/internal/repository/order"
-	service "order/internal/service/order"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	order_v1 "shared/pkg/openapi/order/v1"
-	inventory_v1 "shared/pkg/proto/inventory/v1"
-	payment_v1 "shared/pkg/proto/payment/v1"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	api "order/internal/api/order/v1"
+	inventoryClient "order/internal/client/grpc/inventory/v1"
+	paymentClient "order/internal/client/grpc/payment/v1"
+	repository "order/internal/repository/order"
+	service "order/internal/service/order"
+	order_v1 "shared/pkg/openapi/order/v1"
+	inventory_v1 "shared/pkg/proto/inventory/v1"
+	payment_v1 "shared/pkg/proto/payment/v1"
 )
 
 const (
@@ -36,26 +35,41 @@ const (
 
 func main() {
 	inventoryConn, err := grpc.NewClient(inventoryAdress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	defer func() {
+		err = inventoryConn.Close()
+		if err != nil {
+			log.Printf("ошибка при закрытии соединения с сервисом хранения: %v", err)
+		}
+	}()
+
 	if err != nil {
-		log.Fatalf("ошибка создания клиента сервиса хранения: %v", err)
+		log.Printf("ошибка создания клиента сервиса хранения: %v", err)
+		return
 	}
-	defer inventoryConn.Close()
 	inventoryClient := inventoryClient.NewClient(inventory_v1.NewInventoryServiceClient(inventoryConn))
 
 	paymentConn, err := grpc.NewClient(paymentAdress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	defer func() {
+		err = paymentConn.Close()
+		if err != nil {
+			log.Printf("ошибка при закрытии соединения с сервисом оплаты: %v", err)
+		}
+	}()
+
 	if err != nil {
-		log.Fatalf("ошибка создания клиента сервиса оплаты: %v", err)
+		log.Printf("ошибка создания клиента сервиса оплаты: %v", err)
+		return
 	}
-	defer paymentConn.Close()
 	paymentClient := paymentClient.NewClient(payment_v1.NewPaymentServiceClient(paymentConn))
-	
+
 	repository := repository.NewRepository()
 	service := service.NewService(repository, inventoryClient, paymentClient)
 	api := api.NewApi(service)
 
 	orderServer, err := order_v1.NewServer(api)
 	if err != nil {
-		log.Fatalf("ошибка создания сервера заказов: %v", err)
+		log.Printf("ошибка создания сервера заказов: %v", err)
+		return
 	}
 
 	r := chi.NewRouter()
@@ -69,7 +83,7 @@ func main() {
 	server := &http.Server{
 		Addr:              net.JoinHostPort("localhost", httpPort),
 		Handler:           r,
-		ReadHeaderTimeout: readHeaderTimeout, 
+		ReadHeaderTimeout: readHeaderTimeout,
 	}
 
 	go func() {
@@ -77,6 +91,7 @@ func main() {
 		err = server.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Printf("❌ Ошибка запуска сервера заказов: %v\n", err)
+			return
 		}
 	}()
 

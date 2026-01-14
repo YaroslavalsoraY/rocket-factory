@@ -5,22 +5,22 @@ import (
 	"order/internal/repository"
 )
 
-type Service struct {
+type service struct {
 	OrderRepository repository.OrderRepository
 
 	inventoryClient grpc.InventoryClient
-	paymentClient grpc.PaymentClient
+	paymentClient   grpc.PaymentClient
 }
 
 func NewService(
 	orderRepository repository.OrderRepository,
 	inventoryClient grpc.InventoryClient,
 	paymentClient grpc.PaymentClient,
-) *Service {
-	return &Service{
+) *service {
+	return &service{
 		OrderRepository: orderRepository,
 
 		inventoryClient: inventoryClient,
-		paymentClient: paymentClient,
+		paymentClient:   paymentClient,
 	}
 }

@@ -19,10 +19,10 @@ const (
 )
 
 type OrderInfo struct {
-	OrderUUID string `json:"order_uuid"`
-	UserUUID string `json:"user_uuid"`
-	PartUuids []string `json:"part_uuids"`
-	TotalPrice float64 `json:"total_price"`
+	OrderUUID         string        `json:"order_uuid"`
+	UserUUID          string        `json:"user_uuid"`
+	PartUuids         []string      `json:"part_uuids"`
+	TotalPrice        float64       `json:"total_price"`
 	TransactionalUUID string        `json:"transactional_uuid"`
 	PaymentMethod     PaymentMethod `json:"payment_method"`
 	Status            OrderStatus   `json:"status"`

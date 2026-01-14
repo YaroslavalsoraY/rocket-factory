@@ -2,10 +2,11 @@ package part
 
 import (
 	"context"
+	"slices"
+
 	"inventory/internal/model"
 	"inventory/internal/repository/converter"
 	repoModel "inventory/internal/repository/model"
-	"slices"
 )
 
 func (inv *inventory) ListParts(ctx context.Context, filters model.Filters) ([]model.PartInfo, error) {
@@ -31,7 +32,7 @@ func (inv *inventory) ListParts(ctx context.Context, filters model.Filters) ([]m
 	if len(result) == 0 {
 		return result, model.ErrPartsNotFound
 	}
-	
+
 	return result, nil
 }
 
@@ -57,8 +58,8 @@ func isInFilters(filters repoModel.Filters, part repoModel.PartInfo) bool {
 	return false
 }
 
-func isInTags(filterTags []string, partTags []string) bool {
-	if (len(filterTags) == 0 || filterTags == nil) {
+func isInTags(filterTags, partTags []string) bool {
+	if len(filterTags) == 0 || filterTags == nil {
 		return true
 	}
 	for _, filterTag := range partTags {

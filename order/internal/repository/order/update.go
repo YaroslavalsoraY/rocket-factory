@@ -2,6 +2,7 @@ package order
 
 import (
 	"context"
+
 	"order/internal/model"
 	"order/internal/repository/converter"
 	repoModel "order/internal/repository/model"
@@ -14,12 +15,12 @@ func (r *Repository) UpdateOrder(ctx context.Context, update model.OrderUpdateIn
 	updateInfo := converter.FromServiceToRepoUpdateOrder(update)
 	order, ok := r.storage[uuid]
 
-	if order.Status == repoModel.OrderStatusPAID {
-		return model.ErrAlreadyPaid
-	}
-
 	if !ok {
 		return model.ErrOrderNotFound
+	}
+
+	if order.Status == repoModel.OrderStatusPAID {
+		return model.ErrAlreadyPaid
 	}
 
 	if updateInfo.UserUUID != nil {

@@ -2,10 +2,11 @@ package order
 
 import (
 	"context"
+
 	"order/internal/model"
 )
 
-func (s *Service) PayOrder(ctx context.Context, uuid string, paymentMethod model.PaymentMethod) (string, error) {
+func (s *service) PayOrder(ctx context.Context, uuid string, paymentMethod model.PaymentMethod) (string, error) {
 	order, err := s.GetOrder(ctx, uuid)
 	if err != nil {
 		return "", err
@@ -19,11 +20,10 @@ func (s *Service) PayOrder(ctx context.Context, uuid string, paymentMethod model
 	status := model.OrderStatusPAID
 	newInfo := model.OrderUpdateInfo{
 		PaymentMethod: &paymentMethod,
-		Status: &status,
+		Status:        &status,
 	}
 
 	err = s.OrderRepository.UpdateOrder(ctx, newInfo, uuid)
-
 	if err != nil {
 		return "", err
 	}

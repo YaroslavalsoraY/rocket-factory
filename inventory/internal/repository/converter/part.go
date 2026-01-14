@@ -1,79 +1,49 @@
 package converter
 
 import (
-	repoModel "inventory/internal/repository/model"
 	"inventory/internal/model"
+	repoModel "inventory/internal/repository/model"
 )
 
 func ModelToRepoModelPart(part model.PartInfo) repoModel.PartInfo {
-	var dimensions *repoModel.DimensionsInfo
-	if part.Dimensions != nil {
-		dimensions = &repoModel.DimensionsInfo{
-			Length: part.Dimensions.Length,
-			Width: part.Dimensions.Width,
-			Height: part.Dimensions.Height,
-			Weight: part.Dimensions.Weight,
-		}
-	}
+	dimensions := (*repoModel.DimensionsInfo)(part.Dimensions)
 
-	var manufacturer *repoModel.ManufacturerInfo
-	if part.Manufacturer != nil {
-		manufacturer = &repoModel.ManufacturerInfo{
-			Name: part.Manufacturer.Name,
-			Country: part.Manufacturer.Country,
-			Website: part.Manufacturer.Website,
-		}
-	}
-	
+	manufacturer := (*repoModel.ManufacturerInfo)(part.Manufacturer)
+
 	return repoModel.PartInfo{
-		UUID: part.UUID,
-		Name: part.Name,
-		Description: part.Description,
-		Price: part.Price,
+		UUID:          part.UUID,
+		Name:          part.Name,
+		Description:   part.Description,
+		Price:         part.Price,
 		StockQuantity: part.StockQuantity,
-		Category: repoModel.CategoryEnum(part.Category),
-		Dimensions: dimensions,
-		Manufacturer: manufacturer,
-		Tags: part.Tags,
-		Metadata: part.Metadata,
-		CreatedAt: part.CreatedAt,
-		UpdatedAt: part.UpdatedAt,
+		Category:      repoModel.CategoryEnum(part.Category),
+		Dimensions:    dimensions,
+		Manufacturer:  manufacturer,
+		Tags:          part.Tags,
+		Metadata:      part.Metadata,
+		CreatedAt:     part.CreatedAt,
+		UpdatedAt:     part.UpdatedAt,
 	}
 }
 
 func RepoModelToModelPart(partInfo repoModel.PartInfo) model.PartInfo {
-	var dimensions *model.DimensionsInfo
-	if partInfo.Dimensions != nil {
-		dimensions = &model.DimensionsInfo{
-			Height: partInfo.Dimensions.Height,
-			Length: partInfo.Dimensions.Length,
-			Weight: partInfo.Dimensions.Weight,
-			Width: partInfo.Dimensions.Width,
-		}
-	}
+	dimensions := (*model.DimensionsInfo)(partInfo.Dimensions)
 
-	var manufacturer *model.ManufacturerInfo
-	if partInfo.Manufacturer != nil {
-		manufacturer = &model.ManufacturerInfo{
-			Name: partInfo.Manufacturer.Name,
-			Country: partInfo.Manufacturer.Country,
-			Website: partInfo.Manufacturer.Website,
-		}
-	}
-	
+	manufacturer := (*model.ManufacturerInfo)(partInfo.Manufacturer)
+
 	return model.PartInfo{
-		UUID: partInfo.UUID,
-		Name: partInfo.Name,
-		Description: partInfo.Description,
-		Price: partInfo.Price,
+		UUID:          partInfo.UUID,
+		Name:          partInfo.Name,
+		Description:   partInfo.Description,
+		Price:         partInfo.Price,
 		StockQuantity: partInfo.StockQuantity,
-		Category: model.CategoryEnum(partInfo.Category),
-		Dimensions: dimensions,
-		Manufacturer: manufacturer,
-		Tags: partInfo.Tags,
-		Metadata: partInfo.Metadata,
-		CreatedAt: partInfo.CreatedAt,
-		UpdatedAt: partInfo.UpdatedAt,
+		Category:      model.CategoryEnum(partInfo.Category),
+		Dimensions:    dimensions,
+		Manufacturer:  manufacturer,
+		Tags:          partInfo.Tags,
+		Metadata:      partInfo.Metadata,
+		CreatedAt:     partInfo.CreatedAt,
+		UpdatedAt:     partInfo.UpdatedAt,
 	}
 }
 
@@ -86,11 +56,11 @@ func ModelToRepoModelFilters(filters model.Filters) repoModel.Filters {
 	}
 
 	return repoModel.Filters{
-		UUIDs: filters.UUIDs,
-		Names: filters.Names,
-		Categories: categories,
+		UUIDs:                 filters.UUIDs,
+		Names:                 filters.Names,
+		Categories:            categories,
 		ManufacturerCountries: filters.ManufacturerCountries,
-		Tags: filters.Tags,
+		Tags:                  filters.Tags,
 	}
 }
 
@@ -103,10 +73,10 @@ func RepoModelFiltersToModelFilters(filters repoModel.Filters) model.Filters {
 	}
 
 	return model.Filters{
-		UUIDs: filters.UUIDs,
-		Names: filters.Names,
-		Categories: categories,
+		UUIDs:                 filters.UUIDs,
+		Names:                 filters.Names,
+		Categories:            categories,
 		ManufacturerCountries: filters.ManufacturerCountries,
-		Tags: filters.Tags,
+		Tags:                  filters.Tags,
 	}
 }

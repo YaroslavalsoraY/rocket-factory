@@ -1,11 +1,11 @@
 package converter
 
 import (
-	"inventory/internal/model"
-	inventory_v1 "shared/pkg/proto/inventory/v1"
 	"time"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"inventory/internal/model"
+	inventory_v1 "shared/pkg/proto/inventory/v1"
 )
 
 func PartToPartInfo(part *inventory_v1.Part) *model.PartInfo {
@@ -15,14 +15,14 @@ func PartToPartInfo(part *inventory_v1.Part) *model.PartInfo {
 			Height: part.Dimensions.Height,
 			Length: part.Dimensions.Length,
 			Weight: part.Dimensions.Weight,
-			Width: part.Dimensions.Width,
+			Width:  part.Dimensions.Width,
 		}
 	}
 
 	var manufacturer *model.ManufacturerInfo
 	if part.Manufacturer != nil {
 		manufacturer = &model.ManufacturerInfo{
-			Name: part.Manufacturer.Name,
+			Name:    part.Manufacturer.Name,
 			Country: part.Manufacturer.Country,
 			Website: part.Manufacturer.Website,
 		}
@@ -56,20 +56,20 @@ func PartToPartInfo(part *inventory_v1.Part) *model.PartInfo {
 	if part.UpdatedAt != nil {
 		updatedAt = part.UpdatedAt.AsTime()
 	}
-	
+
 	return &model.PartInfo{
-		UUID: part.Uuid,
-		Name: part.Name,
-		Description: part.Description,
-		Price: part.Price,
+		UUID:          part.Uuid,
+		Name:          part.Name,
+		Description:   part.Description,
+		Price:         part.Price,
 		StockQuantity: part.StockQuantity,
-		Category: model.CategoryEnum(part.Category),
-		Dimensions: dimensions,
-		Manufacturer: manufacturer,
-		Tags: part.Tags,
-		Metadata: metadata,
-		CreatedAt: &createdAt,
-		UpdatedAt: &updatedAt,
+		Category:      model.CategoryEnum(part.Category),
+		Dimensions:    dimensions,
+		Manufacturer:  manufacturer,
+		Tags:          part.Tags,
+		Metadata:      metadata,
+		CreatedAt:     &createdAt,
+		UpdatedAt:     &updatedAt,
 	}
 }
 
@@ -80,14 +80,14 @@ func PartInfoToProto(partInfo *model.PartInfo) *inventory_v1.Part {
 			Height: partInfo.Dimensions.Height,
 			Length: partInfo.Dimensions.Length,
 			Weight: partInfo.Dimensions.Weight,
-			Width: partInfo.Dimensions.Width,
+			Width:  partInfo.Dimensions.Width,
 		}
 	}
 
 	var manufacturer *inventory_v1.Manufacturer
 	if partInfo.Manufacturer != nil {
 		manufacturer = &inventory_v1.Manufacturer{
-			Name: partInfo.Manufacturer.Name,
+			Name:    partInfo.Manufacturer.Name,
 			Country: partInfo.Manufacturer.Country,
 			Website: partInfo.Manufacturer.Website,
 		}
@@ -130,27 +130,27 @@ func PartInfoToProto(partInfo *model.PartInfo) *inventory_v1.Part {
 
 	var createdAt timestamppb.Timestamp
 	if partInfo.CreatedAt != nil {
-		createdAt.Nanos = int32(partInfo.CreatedAt.UnixNano())
+		createdAt.Seconds = int64(partInfo.CreatedAt.Second())
 	}
 
 	var updatedAt timestamppb.Timestamp
 	if partInfo.UpdatedAt != nil {
-		updatedAt.Nanos = int32(partInfo.UpdatedAt.UnixNano())
+		updatedAt.Seconds = int64(partInfo.UpdatedAt.UnixNano())
 	}
-	
+
 	return &inventory_v1.Part{
-		Uuid: partInfo.UUID,
-		Name: partInfo.Name,
-		Description: partInfo.Description,
-		Price: partInfo.Price,
+		Uuid:          partInfo.UUID,
+		Name:          partInfo.Name,
+		Description:   partInfo.Description,
+		Price:         partInfo.Price,
 		StockQuantity: partInfo.StockQuantity,
-		Category: inventory_v1.Category(partInfo.Category),
-		Dimensions: dimensions,
-		Manufacturer: manufacturer,
-		Tags: partInfo.Tags,
-		Metadata: metadata,
-		CreatedAt: &createdAt,
-		UpdatedAt: &updatedAt,
+		Category:      inventory_v1.Category(partInfo.Category),
+		Dimensions:    dimensions,
+		Manufacturer:  manufacturer,
+		Tags:          partInfo.Tags,
+		Metadata:      metadata,
+		CreatedAt:     &createdAt,
+		UpdatedAt:     &updatedAt,
 	}
 }
 
@@ -163,11 +163,11 @@ func PartsFiltersToModelFilters(filters *inventory_v1.PartsFilter) *model.Filter
 	}
 
 	return &model.Filters{
-		UUIDs: filters.Uuids,
-		Names: filters.Names,
-		Categories: categories,
+		UUIDs:                 filters.Uuids,
+		Names:                 filters.Names,
+		Categories:            categories,
 		ManufacturerCountries: filters.ManufacturerCountries,
-		Tags: filters.Tags,
+		Tags:                  filters.Tags,
 	}
 }
 
@@ -180,11 +180,11 @@ func ModelFiltersToPartsFilters(filters *model.Filters) *inventory_v1.PartsFilte
 	}
 
 	return &inventory_v1.PartsFilter{
-		Uuids: filters.UUIDs,
-		Names: filters.Names,
-		Categories: categories,
+		Uuids:                 filters.UUIDs,
+		Names:                 filters.Names,
+		Categories:            categories,
 		ManufacturerCountries: filters.ManufacturerCountries,
-		Tags: filters.Tags,
+		Tags:                  filters.Tags,
 	}
 }
 

@@ -1,13 +1,14 @@
 package part
 
 import (
-	repoModel "inventory/internal/repository/model"
 	"sync"
+
+	repoModel "inventory/internal/repository/model"
 )
 
 type inventory struct {
 	storage map[string]repoModel.PartInfo
-	mu sync.RWMutex
+	mu      sync.RWMutex
 }
 
 func NewInventory() *inventory {
@@ -19,7 +20,7 @@ func NewInventory() *inventory {
 		Price:         12499.99,
 		StockQuantity: 25,
 		Category:      repoModel.CategoryEnum_CATEGORY_PORTHOLE,
-		Tags:      []string{"тормоза", "диск", "передний", "вентилируемый"},
+		Tags:          []string{"тормоза", "диск", "передний", "вентилируемый"},
 	}
 	return &inventory{
 		storage: storage,

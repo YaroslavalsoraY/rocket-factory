@@ -1,9 +1,10 @@
 package converter
 
 import (
+	"time"
+
 	"order/internal/model"
 	inventory_v1 "shared/pkg/proto/inventory/v1"
-	"time"
 )
 
 func ModelFiltersToProto(filters model.Filters) *inventory_v1.PartsFilter {

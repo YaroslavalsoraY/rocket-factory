@@ -8,15 +8,15 @@ import (
 	"os"
 	"os/signal"
 	"path"
-	service "payment/internal/service/payment"
-	api "payment/internal/api/payment/v1"
-	payment_v1 "shared/pkg/proto/payment/v1"
 	"syscall"
 	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
+	api "payment/internal/api/payment/v1"
+	service "payment/internal/service/payment"
+	payment_v1 "shared/pkg/proto/payment/v1"
 )
 
 const grpcPort = 50052
