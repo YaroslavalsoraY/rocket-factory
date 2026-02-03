@@ -1,28 +1,48 @@
 package part
 
 import (
-	"sync"
+	"context"
+	"time"
 
+	"github.com/brianvoe/gofakeit/v6"
+	"go.mongodb.org/mongo-driver/mongo"
 	repoModel "inventory/internal/repository/model"
 )
 
 type inventory struct {
-	storage map[string]repoModel.PartInfo
-	mu      sync.RWMutex
+	collection *mongo.Collection
 }
 
-func NewInventory() *inventory {
-	storage := make(map[string]repoModel.PartInfo)
-	storage["123e4567-e89b-12d3-a456-426614174000"] = repoModel.PartInfo{
-		UUID:          "123e4567-e89b-12d3-a456-426614174000",
-		Name:          "Тормозной диск передний",
-		Description:   "Высококачественный вентилируемый тормозной диск для передних колес",
-		Price:         12499.99,
-		StockQuantity: 25,
-		Category:      repoModel.CategoryEnum_CATEGORY_PORTHOLE,
-		Tags:          []string{"тормоза", "диск", "передний", "вентилируемый"},
+func NewInventory(db *mongo.Database) *inventory {
+	collection := db.Collection("parts")
+
+	_, err := collection.InsertOne(context.Background(), repoModel.PartInfo{
+		UUID:          gofakeit.UUID(),
+		Name:          gofakeit.Name(),
+		Description:   "Test part",
+		Price:         999.9,
+		StockQuantity: 15,
+		Category:      repoModel.CategoryEnum_CATEGORY_ENGINE,
+		Dimensions: &repoModel.DimensionsInfo{
+			Length: 1.0,
+			Width:  2.0,
+			Weight: 3.0,
+			Height: 4.0,
+		},
+		Manufacturer: &repoModel.ManufacturerInfo{
+			Name:    gofakeit.Name(),
+			Country: gofakeit.Country(),
+			Website: gofakeit.URL(),
+		},
+		Tags:      []string{"Test", "Fake"},
+		Metadata:  map[string]any{"power": int64(500), "model": "sosalik", "is_kaif": true, "kaif_percents": float64(89.234)},
+		CreatedAt: time.Now(),
+	})
+	if err != nil {
+		return nil
 	}
+
 	return &inventory{
-		storage: storage,
+		collection: collection,
 	}
 }

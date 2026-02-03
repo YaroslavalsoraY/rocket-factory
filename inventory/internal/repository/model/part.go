@@ -3,18 +3,18 @@ package model
 import "time"
 
 type PartInfo struct {
-	UUID          string
-	Name          string
-	Description   string
-	Price         float64
-	StockQuantity int64
-	Category      CategoryEnum
-	Dimensions    *DimensionsInfo
-	Manufacturer  *ManufacturerInfo
-	Tags          []string
-	Metadata      map[string]*any
-	CreatedAt     *time.Time
-	UpdatedAt     *time.Time
+	UUID          string            `bson:"_id"`
+	Name          string            `bson:"name"`
+	Description   string            `bson:"desription"`
+	Price         float64           `bson:"price"`
+	StockQuantity int64             `bson:"stock_quantity"`
+	Category      CategoryEnum      `bson:"category"`
+	Dimensions    *DimensionsInfo   `bson:"dimensions,omitempty"`
+	Manufacturer  *ManufacturerInfo `bson:"manufacturer,omitempty"`
+	Tags          []string          `bson:"tags"`
+	Metadata      map[string]any    `bson:"metadata"`
+	CreatedAt     time.Time         `bson:"created_at"`
+	UpdatedAt     *time.Time        `bson:"updated_at,omitempty"`
 }
 
 type Filters struct {
@@ -26,16 +26,16 @@ type Filters struct {
 }
 
 type ManufacturerInfo struct {
-	Name    string
-	Country string
-	Website string
+	Name    string `bson:"name"`
+	Country string `bson:"country"`
+	Website string `bson:"website"`
 }
 
 type DimensionsInfo struct {
-	Length float64
-	Width  float64
-	Height float64
-	Weight float64
+	Length float64 `bson:"length"`
+	Width  float64 `bson:"width"`
+	Height float64 `bson:"height"`
+	Weight float64 `bson:"weight"`
 }
 
 type CategoryEnum int32

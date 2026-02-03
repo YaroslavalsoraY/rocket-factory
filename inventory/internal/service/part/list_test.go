@@ -1,17 +1,16 @@
 package part
 
 import (
-	"inventory/internal/model"
-
 	"github.com/brianvoe/gofakeit/v6"
+	"inventory/internal/model"
 )
 
 func (s *ServiceSuite) TestList() {
 	var (
 		testFilters = model.Filters{}
-		uuid = gofakeit.UUID()
-		testParts = []model.PartInfo{
-				{
+		uuid        = gofakeit.UUID()
+		testParts   = []model.PartInfo{
+			{
 				UUID:          uuid,
 				Name:          gofakeit.MinecraftArmorPart(),
 				Description:   gofakeit.Paragraph(3, 5, 5, " "),
@@ -32,11 +31,9 @@ func (s *ServiceSuite) TestList() {
 }
 
 func (s *ServiceSuite) TestListError() {
-	var (
-		testFilters = model.Filters{
-			UUIDs: []string{gofakeit.UUID()},
-		}
-	)
+	testFilters := model.Filters{
+		UUIDs: []string{gofakeit.UUID()},
+	}
 
 	s.InvRepository.On("ListParts", s.ctx, testFilters).Return([]model.PartInfo{}, model.ErrPartsNotFound)
 

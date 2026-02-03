@@ -33,9 +33,6 @@ jobs:
         uses: actions/setup-go@v5.4.0
         with:
           go-version: ${{ inputs.go-version }}
-      
-      - name: Fix go paths
-        run: export GOTOOLDIR="$(go env GOROOT)/pkg/tool/linux_amd64"
 
       - name: 📌 Install Task
         uses: arduino/setup-task@v2.0.0

@@ -13,11 +13,14 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	api "order/internal/api/order/v1"
 	inventoryClient "order/internal/client/grpc/inventory/v1"
 	paymentClient "order/internal/client/grpc/payment/v1"
+	"order/internal/migrator"
 	repository "order/internal/repository/order"
 	service "order/internal/service/order"
 	order_v1 "shared/pkg/openapi/order/v1"
@@ -29,6 +32,8 @@ const (
 	httpPort          = "8080"
 	inventoryAdress   = "localhost:50051"
 	paymentAdress     = "localhost:50052"
+	postgresURI       = "postgres://order-service-user:order-service-password@localhost:5432/order-service"
+	migrationsDir     = "order/migrations"
 	readHeaderTimeout = 5 * time.Second
 	shutdownTimeout   = 10 * time.Second
 )
@@ -62,7 +67,36 @@ func main() {
 	}
 	paymentClient := paymentClient.NewClient(payment_v1.NewPaymentServiceClient(paymentConn))
 
-	repository := repository.NewRepository()
+	ctx := context.Background()
+
+	pool, err := pgxpool.New(ctx, postgresURI)
+	if err != nil {
+		log.Printf("failed to connections to database: %v\n", err)
+		return
+	}
+	defer pool.Close()
+
+	conn, err := pool.Acquire(ctx)
+	if err != nil {
+		log.Printf("failed to get connection from pool: %v\n", err)
+		return
+	}
+	defer conn.Release()
+
+	err = conn.Ping(ctx)
+	if err != nil {
+		log.Printf("failed to ping database: %v\n", err)
+		return
+	}
+
+	migrator := migrator.NewMigrator(stdlib.OpenDB(*conn.Conn().Config().Copy()), migrationsDir)
+	err = migrator.Up()
+	if err != nil {
+		log.Printf("failed to apply migrations: %v\n", err)
+		return
+	}
+
+	repository := repository.NewRepository(pool)
 	service := service.NewService(repository, inventoryClient, paymentClient)
 	api := api.NewApi(service)
 

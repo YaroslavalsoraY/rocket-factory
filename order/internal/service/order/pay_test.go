@@ -1,28 +1,27 @@
 package order
 
 import (
-	"order/internal/model"
-
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/stretchr/testify/mock"
+	"order/internal/model"
 )
 
 func (s *ServiceSuite) TestPayOrder() {
 	var (
 		orderUUID = gofakeit.UUID()
-		userUUID = gofakeit.UUID()
+		userUUID  = gofakeit.UUID()
 		testOrder = model.OrderInfo{
-			OrderUUID:          orderUUID,
+			OrderUUID:         orderUUID,
 			UserUUID:          userUUID,
-			PartUuids:   []string{gofakeit.UUID()},
-			TotalPrice:         gofakeit.Float64Range(1, 99999),
+			PartUuids:         []string{gofakeit.UUID()},
+			TotalPrice:        gofakeit.Float64Range(1, 99999),
 			TransactionalUUID: gofakeit.UUID(),
-			PaymentMethod: model.PaymentMethodPAYMENTMETHODCREDITCARD,
-			Status: model.OrderStatusPAID,
+			PaymentMethod:     model.PaymentMethodPAYMENTMETHODCREDITCARD,
+			Status:            model.OrderStatusPENDINGPAYMENT,
 		}
 	)
-	
-	s.orderRepository.On("UpdateOrder", s.ctx, mock.Anything, orderUUID).Return(nil)
+
+	s.orderRepository.On("PayOrder", s.ctx, mock.Anything, orderUUID).Return(nil)
 
 	s.orderRepository.On("GetOrder", s.ctx, orderUUID).Return(testOrder, nil)
 

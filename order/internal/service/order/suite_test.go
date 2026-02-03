@@ -2,11 +2,11 @@ package order
 
 import (
 	"context"
-	clientMocks "order/internal/client/grpc/mocks"
-	repositoryMock "order/internal/repository/mocks"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	clientMocks "order/internal/client/grpc/mocks"
+	repositoryMock "order/internal/repository/mocks"
 )
 
 type ServiceSuite struct {
@@ -33,14 +33,13 @@ func (s *ServiceSuite) SetupTest() {
 	s.paymentClient = clientMocks.NewPaymentClient(s.T())
 
 	s.service = NewService(
-		s.orderRepository, 
+		s.orderRepository,
 		s.inventoryClient,
 		s.paymentClient,
 	)
 }
 
 func (s *ServiceSuite) TearDownTest() {
-
 }
 
 func TestServiceIntegration(t *testing.T) {

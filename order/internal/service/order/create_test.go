@@ -1,20 +1,19 @@
 package order
 
 import (
-	"order/internal/model"
-
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/stretchr/testify/mock"
+	"order/internal/model"
 )
 
 func (s *ServiceSuite) TestCreateOrder() {
 	var (
-		uuid = gofakeit.UUID()
+		uuid      = gofakeit.UUID()
 		testUUIDs = []string{uuid}
-		userUUID = gofakeit.UUID()
+		userUUID  = gofakeit.UUID()
 		testPrice = gofakeit.Float32Range(1, 99999)
 		testParts = []*model.PartInfo{
-				{
+			{
 				UUID:          uuid,
 				Name:          gofakeit.MinecraftArmorPart(),
 				Description:   gofakeit.Paragraph(3, 5, 5, " "),
@@ -38,9 +37,9 @@ func (s *ServiceSuite) TestCreateOrder() {
 
 func (s *ServiceSuite) TestCreateOrderPartsNotFound() {
 	var (
-		uuid = gofakeit.UUID()
+		uuid      = gofakeit.UUID()
 		testUUIDs = []string{uuid}
-		userUUID = gofakeit.UUID()
+		userUUID  = gofakeit.UUID()
 		testParts = []*model.PartInfo{}
 	)
 

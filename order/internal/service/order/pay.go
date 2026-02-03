@@ -12,6 +12,10 @@ func (s *service) PayOrder(ctx context.Context, uuid string, paymentMethod model
 		return "", err
 	}
 
+	if order.Status == model.OrderStatusPAID {
+		return "", model.ErrAlreadyPaid
+	}
+
 	transactionID, err := s.paymentClient.PayOrder(ctx, uuid, order.UserUUID, string(paymentMethod))
 	if err != nil {
 		return "", nil
@@ -19,11 +23,12 @@ func (s *service) PayOrder(ctx context.Context, uuid string, paymentMethod model
 
 	status := model.OrderStatusPAID
 	newInfo := model.OrderUpdateInfo{
-		PaymentMethod: &paymentMethod,
-		Status:        &status,
+		TransactionalUUID: &transactionID,
+		PaymentMethod:     &paymentMethod,
+		Status:            &status,
 	}
 
-	err = s.OrderRepository.UpdateOrder(ctx, newInfo, uuid)
+	err = s.OrderRepository.PayOrder(ctx, newInfo, uuid)
 	if err != nil {
 		return "", err
 	}

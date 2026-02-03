@@ -12,8 +12,8 @@ type PartInfo struct {
 	Dimensions    *DimensionsInfo
 	Manufacturer  *ManufacturerInfo
 	Tags          []string
-	Metadata      map[string]*any
-	CreatedAt     *time.Time
+	Metadata      map[string]any
+	CreatedAt     time.Time
 	UpdatedAt     *time.Time
 }
 

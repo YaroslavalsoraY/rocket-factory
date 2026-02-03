@@ -1,22 +1,21 @@
 package order
 
 import (
-	"order/internal/model"
-
 	"github.com/brianvoe/gofakeit/v6"
+	"order/internal/model"
 )
 
 func (s *ServiceSuite) TestGetOrder() {
 	var (
-		uuid = gofakeit.UUID()
+		uuid      = gofakeit.UUID()
 		testOrder = model.OrderInfo{
-			OrderUUID:          uuid,
+			OrderUUID:         uuid,
 			UserUUID:          gofakeit.UUID(),
-			PartUuids:   []string{gofakeit.UUID()},
-			TotalPrice:         gofakeit.Float64Range(1, 99999),
+			PartUuids:         []string{gofakeit.UUID()},
+			TotalPrice:        gofakeit.Float64Range(1, 99999),
 			TransactionalUUID: gofakeit.UUID(),
-			PaymentMethod: model.PaymentMethodPAYMENTMETHODCREDITCARD,
-			Status: model.OrderStatusPAID,
+			PaymentMethod:     model.PaymentMethodPAYMENTMETHODCREDITCARD,
+			Status:            model.OrderStatusPAID,
 		}
 	)
 

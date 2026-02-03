@@ -28,7 +28,7 @@ func PartToPartInfo(part *inventory_v1.Part) *model.PartInfo {
 		}
 	}
 
-	metadata := make(map[string]*any)
+	metadata := make(map[string]any)
 	if len(part.Metadata) != 0 {
 		for k, v := range part.Metadata {
 			var value any
@@ -43,7 +43,7 @@ func PartToPartInfo(part *inventory_v1.Part) *model.PartInfo {
 				value = v.GetBoolValue()
 			}
 
-			metadata[k] = &value
+			metadata[k] = value
 		}
 	}
 
@@ -68,7 +68,7 @@ func PartToPartInfo(part *inventory_v1.Part) *model.PartInfo {
 		Manufacturer:  manufacturer,
 		Tags:          part.Tags,
 		Metadata:      metadata,
-		CreatedAt:     &createdAt,
+		CreatedAt:     createdAt,
 		UpdatedAt:     &updatedAt,
 	}
 }
@@ -97,29 +97,29 @@ func PartInfoToProto(partInfo *model.PartInfo) *inventory_v1.Part {
 	if len(partInfo.Metadata) != 0 {
 		for k, v := range partInfo.Metadata {
 			var value inventory_v1.Value
-			switch (*v).(type) {
+			switch (v).(type) {
 			case string:
 				value = inventory_v1.Value{
 					Value: &inventory_v1.Value_StringValue{
-						StringValue: (*v).(string),
+						StringValue: (v).(string),
 					},
 				}
 			case int64:
 				value = inventory_v1.Value{
 					Value: &inventory_v1.Value_Int64Value{
-						Int64Value: (*v).(int64),
+						Int64Value: (v).(int64),
 					},
 				}
 			case float64:
 				value = inventory_v1.Value{
 					Value: &inventory_v1.Value_DoubleValue{
-						DoubleValue: (*v).(float64),
+						DoubleValue: (v).(float64),
 					},
 				}
 			case bool:
 				value = inventory_v1.Value{
 					Value: &inventory_v1.Value_BoolValue{
-						BoolValue: (*v).(bool),
+						BoolValue: (v).(bool),
 					},
 				}
 			}
@@ -128,14 +128,11 @@ func PartInfoToProto(partInfo *model.PartInfo) *inventory_v1.Part {
 		}
 	}
 
-	var createdAt timestamppb.Timestamp
-	if partInfo.CreatedAt != nil {
-		createdAt.Seconds = int64(partInfo.CreatedAt.Second())
-	}
+	createdAt := timestamppb.New(partInfo.CreatedAt)
 
-	var updatedAt timestamppb.Timestamp
+	var updatedAt *timestamppb.Timestamp
 	if partInfo.UpdatedAt != nil {
-		updatedAt.Seconds = int64(partInfo.UpdatedAt.UnixNano())
+		updatedAt = timestamppb.New(*partInfo.UpdatedAt)
 	}
 
 	return &inventory_v1.Part{
@@ -149,8 +146,8 @@ func PartInfoToProto(partInfo *model.PartInfo) *inventory_v1.Part {
 		Manufacturer:  manufacturer,
 		Tags:          partInfo.Tags,
 		Metadata:      metadata,
-		CreatedAt:     &createdAt,
-		UpdatedAt:     &updatedAt,
+		CreatedAt:     createdAt,
+		UpdatedAt:     updatedAt,
 	}
 }
 

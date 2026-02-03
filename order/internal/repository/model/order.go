@@ -1,5 +1,7 @@
 package model
 
+import "database/sql"
+
 type PaymentMethod string
 
 const (
@@ -19,13 +21,13 @@ const (
 )
 
 type OrderInfo struct {
-	OrderUUID         string        `json:"order_uuid"`
-	UserUUID          string        `json:"user_uuid"`
-	PartUuids         []string      `json:"part_uuids"`
-	TotalPrice        float64       `json:"total_price"`
-	TransactionalUUID string        `json:"transactional_uuid"`
-	PaymentMethod     PaymentMethod `json:"payment_method"`
-	Status            OrderStatus   `json:"status"`
+	OrderUUID         string
+	UserUUID          string
+	PartUuids         []string
+	TotalPrice        float64
+	TransactionalUUID sql.NullString
+	PaymentMethod     sql.NullString
+	Status            OrderStatus
 }
 
 type OrderUpdateInfo struct {

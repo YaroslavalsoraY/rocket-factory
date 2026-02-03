@@ -2,17 +2,17 @@ package part
 
 import (
 	"context"
-	"inventory/internal/repository/mocks"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	"inventory/internal/repository/mocks"
 )
 
 type ServiceSuite struct {
 	suite.Suite
-	ctx context.Context
+	ctx           context.Context
 	InvRepository *mocks.InventoryRepository
-	service *service
+	service       *service
 }
 
 func (s *ServiceSuite) SetupTest() {
@@ -26,7 +26,6 @@ func (s *ServiceSuite) SetupTest() {
 }
 
 func (s *ServiceSuite) TearDownTest() {
-
 }
 
 func TestServiceIntegration(t *testing.T) {

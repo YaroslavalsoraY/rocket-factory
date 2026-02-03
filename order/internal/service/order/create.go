@@ -3,9 +3,8 @@ package order
 import (
 	"context"
 
-	"order/internal/model"
-
 	"github.com/google/uuid"
+	"order/internal/model"
 )
 
 func (s *service) CreateOrder(ctx context.Context, userUUID string, partsUUIDs []string) (string, float32, error) {

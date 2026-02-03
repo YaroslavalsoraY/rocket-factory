@@ -3,16 +3,17 @@ package part
 import (
 	"context"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"inventory/internal/model"
 	repoConverter "inventory/internal/repository/converter"
+	repoModel "inventory/internal/repository/model"
 )
 
 func (inv *inventory) GetPart(ctx context.Context, uuid string) (model.PartInfo, error) {
-	inv.mu.RLock()
-	defer inv.mu.RUnlock()
+	var part repoModel.PartInfo
 
-	part, ok := inv.storage[uuid]
-	if !ok {
+	err := inv.collection.FindOne(ctx, bson.M{"_id": uuid}).Decode(&part)
+	if err != nil {
 		return model.PartInfo{}, model.ErrPartsNotFound
 	}
 

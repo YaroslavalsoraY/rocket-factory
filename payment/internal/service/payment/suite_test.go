@@ -22,7 +22,6 @@ func (s *ServiceSuite) SetupTest() {
 }
 
 func (s *ServiceSuite) TearDownTest() {
-
 }
 
 func TestServiceIntegration(t *testing.T) {

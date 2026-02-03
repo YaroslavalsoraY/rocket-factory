@@ -1,13 +1,13 @@
 package part
 
 import (
-	"inventory/internal/model"
 	"github.com/brianvoe/gofakeit/v6"
+	"inventory/internal/model"
 )
 
 func (s *ServiceSuite) TestGetPart() {
 	var (
-		uuid = gofakeit.UUID()
+		uuid     = gofakeit.UUID()
 		testPart = model.PartInfo{
 			UUID:          uuid,
 			Name:          gofakeit.MinecraftArmorPart(),
@@ -29,7 +29,7 @@ func (s *ServiceSuite) TestGetPart() {
 
 func (s *ServiceSuite) TestGetError() {
 	var (
-		uuid = gofakeit.UUID()
+		uuid      = gofakeit.UUID()
 		emptyPart = model.PartInfo{}
 	)
 
@@ -40,4 +40,3 @@ func (s *ServiceSuite) TestGetError() {
 	s.ErrorIs(err, model.ErrPartsNotFound)
 	s.Equal(emptyPart, part)
 }
-

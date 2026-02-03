@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
@@ -20,7 +22,10 @@ import (
 	inventory_v1 "shared/pkg/proto/inventory/v1"
 )
 
-const grpcPort = 50051
+const (
+	grpcPort = 50051
+	dbURI    = "mongodb://inventory_mongo_user:inventory_mongo_password@localhost:27017/database?authSource=admin"
+)
 
 func LoggerInterceptor() grpc.UnaryServerInterceptor {
 	return func(
@@ -57,6 +62,38 @@ func LoggerInterceptor() grpc.UnaryServerInterceptor {
 }
 
 func main() {
+	ctx := context.Background()
+
+	s := grpc.NewServer(grpc.UnaryInterceptor(LoggerInterceptor()))
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(dbURI))
+	if err != nil {
+		log.Printf("failed to connect to database: %v\n", err)
+		return
+	}
+	defer func() {
+		cerr := client.Disconnect(ctx)
+		if cerr != nil {
+			log.Printf("failed to disconnect: %v\n", cerr)
+		}
+	}()
+
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Printf("failed to ping database: %v\n", err)
+		return
+	}
+
+	db := client.Database("inventory-service")
+
+	repo := repository.NewInventory(db)
+	service := service.NewService(repo)
+	api := api.NewApi(service)
+
+	inventory_v1.RegisterInventoryServiceServer(s, api)
+
+	reflection.Register(s)
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
 	if err != nil {
 		log.Printf("failed to listen: %v\n", err)
@@ -67,16 +104,6 @@ func main() {
 			log.Printf("failed to close listener: %v\n", cerr)
 		}
 	}()
-
-	s := grpc.NewServer(grpc.UnaryInterceptor(LoggerInterceptor()))
-
-	repo := repository.NewInventory()
-	service := service.NewService(repo)
-	api := api.NewApi(service)
-
-	inventory_v1.RegisterInventoryServiceServer(s, api)
-
-	reflection.Register(s)
 
 	go func() {
 		log.Printf("🚀 Inventory gRPC server listening on %d\n", grpcPort)
