@@ -34,8 +34,10 @@ jobs:
         with:
           go-version: ${{ inputs.go-version }}
 
-      - name: 🧰 Fix go paths
-        run: export GOTOOLDIR="$(go env GOROOT)/pkg/tool/linux_amd64"
+      - name: 🔧 Fix Go toolchain
+        run: |
+          go env -w GOTOOLCHAIN=go${{ inputs.go-version }}+auto
+          echo "✅ GOTOOLCHAIN set to go${{ inputs.go-version }}+auto"
 
       - name: 📌 Install Task
         uses: arduino/setup-task@v2.0.0
