@@ -2,122 +2,51 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"net"
-	"os"
 	"os/signal"
-	"path"
 	"syscall"
 	"time"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/status"
-	api "inventory/internal/api/inventory/v1"
-	repository "inventory/internal/repository/part"
-	service "inventory/internal/service/part"
-	inventory_v1 "shared/pkg/proto/inventory/v1"
+	"go.uber.org/zap"
+	"inventory/internal/app"
+	"inventory/internal/config"
+	"platform/pkg/closer"
+	"platform/pkg/logger"
 )
 
-const (
-	grpcPort = 50051
-	dbURI    = "mongodb://inventory_mongo_user:inventory_mongo_password@localhost:27017/database?authSource=admin"
-)
+const configPath = ".env"
 
-func LoggerInterceptor() grpc.UnaryServerInterceptor {
-	return func(
-		ctx context.Context,
-		req interface{},
-		info *grpc.UnaryServerInfo,
-		handler grpc.UnaryHandler,
-	) (interface{}, error) {
-		// Извлекаем имя метода из полного пути
-		method := path.Base(info.FullMethod)
+func main() {
+	err := config.Load(configPath)
+	if err != nil {
+		log.Printf("failed to load config: %v\n", err)
+		return
+	}
 
-		// Логируем начало вызова метода
-		log.Printf("💨 Started gRPC method %s\n", method)
+	appCtx, appCancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer appCancel()
+	defer gracefulShutdown()
 
-		// Засекаем время начала выполнения
-		startTime := time.Now()
+	closer.Configure(syscall.SIGINT, syscall.SIGTERM)
 
-		// Вызываем обработчик
-		resp, err := handler(ctx, req)
+	a, err := app.New(appCtx)
+	if err != nil {
+		logger.Error(appCtx, "❌ Не удалось создать приложение", zap.Error(err))
+		return
+	}
 
-		// Вычисляем длительность выполнения
-		duration := time.Since(startTime)
-
-		// Форматируем сообщение в зависимости от результата
-		if err != nil {
-			st, _ := status.FromError(err)
-			log.Printf("❌ Finished gRPC method %s with code %s: %v (took: %v)\n", method, st.Code(), err, duration)
-		} else {
-			log.Printf("✅ Finished gRPC method %s successfully (took: %v)\n", method, duration)
-		}
-
-		return resp, err
+	err = a.Run(appCtx)
+	if err != nil {
+		logger.Error(appCtx, "❌ Ошибка при работе приложения", zap.Error(err))
+		return
 	}
 }
 
-func main() {
-	ctx := context.Background()
+func gracefulShutdown() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	s := grpc.NewServer(grpc.UnaryInterceptor(LoggerInterceptor()))
-
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(dbURI))
-	if err != nil {
-		log.Printf("failed to connect to database: %v\n", err)
-		return
+	if err := closer.CloseAll(ctx); err != nil {
+		logger.Error(ctx, "❌ Ошибка при завершении работы", zap.Error(err))
 	}
-	defer func() {
-		cerr := client.Disconnect(ctx)
-		if cerr != nil {
-			log.Printf("failed to disconnect: %v\n", cerr)
-		}
-	}()
-
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		log.Printf("failed to ping database: %v\n", err)
-		return
-	}
-
-	db := client.Database("inventory-service")
-
-	repo := repository.NewInventory(db)
-	service := service.NewService(repo)
-	api := api.NewApi(service)
-
-	inventory_v1.RegisterInventoryServiceServer(s, api)
-
-	reflection.Register(s)
-
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
-	if err != nil {
-		log.Printf("failed to listen: %v\n", err)
-		return
-	}
-	defer func() {
-		if cerr := lis.Close(); cerr != nil {
-			log.Printf("failed to close listener: %v\n", cerr)
-		}
-	}()
-
-	go func() {
-		log.Printf("🚀 Inventory gRPC server listening on %d\n", grpcPort)
-		err = s.Serve(lis)
-		if err != nil {
-			log.Printf("failed to serve: %v\n", err)
-			return
-		}
-	}()
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("🛑 Shutting down inventory gRPC server...")
-	s.GracefulStop()
-	log.Println("✅ Inventory server stopped")
 }

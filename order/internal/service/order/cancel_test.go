@@ -11,11 +11,11 @@ func (s *ServiceSuite) TestCancelOrder() {
 		orderUUID = gofakeit.UUID()
 		userUUID  = gofakeit.UUID()
 		testOrder = model.OrderInfo{
-			OrderUUID:         orderUUID,
-			UserUUID:          userUUID,
-			PartUuids:         []string{gofakeit.UUID()},
-			TotalPrice:        gofakeit.Float64Range(1, 99999),
-			Status:            model.OrderStatusPENDINGPAYMENT,
+			OrderUUID:  orderUUID,
+			UserUUID:   userUUID,
+			PartUuids:  []string{gofakeit.UUID()},
+			TotalPrice: gofakeit.Float64Range(1, 99999),
+			Status:     model.OrderStatusPENDINGPAYMENT,
 		}
 	)
 
@@ -32,11 +32,11 @@ func (s *ServiceSuite) TestCancelOrderError() {
 		orderUUID = gofakeit.UUID()
 		userUUID  = gofakeit.UUID()
 		testOrder = model.OrderInfo{
-			OrderUUID:         orderUUID,
-			UserUUID:          userUUID,
-			PartUuids:         []string{gofakeit.UUID()},
-			TotalPrice:        gofakeit.Float64Range(1, 99999),
-			Status:            model.OrderStatusPENDINGPAYMENT,
+			OrderUUID:  orderUUID,
+			UserUUID:   userUUID,
+			PartUuids:  []string{gofakeit.UUID()},
+			TotalPrice: gofakeit.Float64Range(1, 99999),
+			Status:     model.OrderStatusPENDINGPAYMENT,
 		}
 	)
 

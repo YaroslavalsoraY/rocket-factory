@@ -38,6 +38,7 @@ func NewInventory(db *mongo.Database) *inventory {
 		Metadata:  map[string]any{"power": int64(500), "model": "sosalik", "is_kaif": true, "kaif_percents": float64(89.234)},
 		CreatedAt: time.Now(),
 	})
+
 	if err != nil {
 		return nil
 	}

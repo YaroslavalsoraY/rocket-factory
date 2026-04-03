@@ -2,15 +2,16 @@ package payment
 
 import (
 	"context"
-	"log"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
+	"platform/pkg/logger"
 )
 
 func (s *service) PayOrder(ctx context.Context) (string, error) {
 	transactionID := uuid.New()
 
-	log.Printf("Оплата прошла успешно, transaction_uuid: %s", transactionID.String())
+	logger.Info(ctx, "Оплата прошла успешно", zap.String("transaction ID", transactionID.String()))
 
 	return transactionID.String(), nil
 }

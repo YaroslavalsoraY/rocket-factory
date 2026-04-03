@@ -1,21 +1,21 @@
 services:
   mongo-inventory:
-    image: mongo:7.0.5
+    image: ${MONGO_IMAGE_NAME}
     
     container_name: mongo-inventory
 
     environment:
-      MONGO_INITDB_DATABASE: inventory-service
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
 
-      MONGO_INITDB_ROOT_USERNAME: inventory_mongo_user
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
 
-      MONGO_INITDB_ROOT_PASSWORD: inventory_mongo_password
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
   
     volumes:
       - mongo_inventory_data:/data/db
   
     ports:
-      - "27017:27017"
+      - "${EXTERNAL_MONGO_PORT}:27017"
   
     healthcheck:
       test:
@@ -32,6 +32,17 @@ services:
 
     networks:
       - microservices-net
+  
+  inventory-service:
+    build:
+      context: ../../..
+      dockerfile: deploy/docker/inventory/Dockerfile
+    networks:
+      - microservices-net
+    depends_on:
+      - mongo-inventory
+    ports:
+      - "${GRPC_PORT}:${GRPC_PORT}"
 
 volumes:
   mongo_inventory_data:

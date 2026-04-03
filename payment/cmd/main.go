@@ -3,92 +3,49 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
-	"net"
-	"os"
 	"os/signal"
-	"path"
 	"syscall"
 	"time"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/status"
-	api "payment/internal/api/payment/v1"
-	service "payment/internal/service/payment"
-	payment_v1 "shared/pkg/proto/payment/v1"
+	"go.uber.org/zap"
+	"payment/internal/app"
+	"payment/internal/config"
+	"platform/pkg/closer"
+	"platform/pkg/logger"
 )
 
-const grpcPort = 50052
+const configPath = "./deploy/compose/payment/.env"
 
-func LoggerInterceptor() grpc.UnaryServerInterceptor {
-	return func(
-		ctx context.Context,
-		req interface{},
-		info *grpc.UnaryServerInfo,
-		handler grpc.UnaryHandler,
-	) (interface{}, error) {
-		// Извлекаем имя метода из полного пути
-		method := path.Base(info.FullMethod)
+func main() {
+	err := config.Load(configPath)
+	if err != nil {
+		panic(fmt.Errorf("failed to load config: %w", err))
+	}
 
-		// Логируем начало вызова метода
-		log.Printf("💨 Started gRPC method %s\n", method)
+	appCtx, appCancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer appCancel()
+	defer gracefulShutdown()
 
-		// Засекаем время начала выполнения
-		startTime := time.Now()
+	closer.Configure(syscall.SIGINT, syscall.SIGTERM)
 
-		// Вызываем обработчик
-		resp, err := handler(ctx, req)
+	a, err := app.New(appCtx)
+	if err != nil {
+		logger.Error(appCtx, "❌ Не удалось создать приложение", zap.Error(err))
+		return
+	}
 
-		// Вычисляем длительность выполнения
-		duration := time.Since(startTime)
-
-		// Форматируем сообщение в зависимости от результата
-		if err != nil {
-			st, _ := status.FromError(err)
-			log.Printf("❌ Finished gRPC method %s with code %s: %v (took: %v)\n", method, st.Code(), err, duration)
-		} else {
-			log.Printf("✅ Finished gRPC method %s successfully (took: %v)\n", method, duration)
-		}
-
-		return resp, err
+	err = a.Run(appCtx)
+	if err != nil {
+		logger.Error(appCtx, "❌ Ошибка при работе приложения", zap.Error(err))
+		return
 	}
 }
 
-func main() {
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
-	if err != nil {
-		log.Printf("failed to listen: %v\n", err)
-		return
+func gracefulShutdown() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := closer.CloseAll(ctx); err != nil {
+		logger.Error(ctx, "❌ Ошибка при завершении работы", zap.Error(err))
 	}
-	defer func() {
-		if cerr := lis.Close(); cerr != nil {
-			log.Printf("failed to close listener: %v\n", cerr)
-		}
-	}()
-
-	s := grpc.NewServer(grpc.UnaryInterceptor(LoggerInterceptor()))
-
-	service := service.NewService()
-	api := api.NewApi(service)
-
-	payment_v1.RegisterPaymentServiceServer(s, api)
-
-	reflection.Register(s)
-
-	go func() {
-		log.Printf("🚀 Payment gRPC server listening on %d\n", grpcPort)
-		err = s.Serve(lis)
-		if err != nil {
-			log.Printf("failed to serve: %v\n", err)
-			return
-		}
-	}()
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("🛑 Shutting down payment gRPC server...")
-	s.GracefulStop()
-	log.Println("✅ Payment server stopped")
 }

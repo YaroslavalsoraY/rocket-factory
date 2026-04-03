@@ -5,6 +5,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	"platform/pkg/logger"
+)
+
+const (
+	testLogLvl = "info"
+	testAsJson = false
 )
 
 type ServiceSuite struct {
@@ -17,6 +23,11 @@ type ServiceSuite struct {
 
 func (s *ServiceSuite) SetupTest() {
 	s.ctx = context.Background()
+
+	err := logger.Init(testLogLvl, testAsJson)
+	if err != nil {
+		return
+	}
 
 	s.service = NewService()
 }

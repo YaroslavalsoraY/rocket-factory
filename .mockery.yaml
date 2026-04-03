@@ -14,6 +14,9 @@ packages:
   inventory/internal/repository:
     config:
       include-regex: ".*Repository"
+  inventory/internal/config:
+    config:
+      include-regex: ".*Config"
   
   order/internal/service:
     config:
@@ -24,8 +27,15 @@ packages:
   order/internal/client/grpc:
     config:
       include-regex: ".*Client"
+  order/internal/config:
+    config:
+      include-regex: ".*Config"
 
   payment/internal/service:
     config:
       include-regex: ".*Service"
+  payment/internal/config:
+    config:
+      include-regex: ".*Config"
+    
   
