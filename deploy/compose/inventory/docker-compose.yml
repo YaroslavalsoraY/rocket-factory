@@ -35,7 +35,7 @@ services:
   
   inventory-service:
     build:
-      context: ../../..
+      context: ${DOCKERFILE_PATH}
       dockerfile: deploy/docker/inventory/Dockerfile
     networks:
       - microservices-net
