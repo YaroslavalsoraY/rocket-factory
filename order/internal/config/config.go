@@ -13,6 +13,9 @@ type config struct {
 	InventoryGRPC InventoryGRPCConfig
 	PaymentGRPC   PaymentGRPCConfig
 	Logger        LoggerConfig
+	KafkaProducer KafkaProducerConfig
+	KafkaConsumer KafkaConsumerConfig
+	Kafka         KafkaConfig
 }
 
 func Load(path ...string) error {
@@ -46,12 +49,30 @@ func Load(path ...string) error {
 		return err
 	}
 
+	kafka, err := env.NewKafkaConfig()
+	if err != nil {
+		return err
+	}
+
+	kafkaProducer, err := env.NewKafkaProducerConfig()
+	if err != nil {
+		return err
+	}
+
+	kafkaConsumer, err := env.NewKafkaConsumerConfig()
+	if err != nil {
+		return err
+	}
+
 	appConfig = &config{
 		OrderHttp:     orderHttp,
 		Postgres:      postgres,
 		InventoryGRPC: inventoryGRPC,
 		PaymentGRPC:   paymentGRPC,
 		Logger:        logger,
+		Kafka:         kafka,
+		KafkaProducer: kafkaProducer,
+		KafkaConsumer: kafkaConsumer,
 	}
 
 	return nil

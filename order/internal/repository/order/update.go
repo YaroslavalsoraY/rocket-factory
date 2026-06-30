@@ -71,7 +71,7 @@ func (r *Repository) PayOrder(ctx context.Context, update model.OrderUpdateInfo,
 	return nil
 }
 
-func (r *Repository) CancelOrder(ctx context.Context, update model.OrderUpdateInfo, uuid string) error {
+func (r *Repository) UpdateOrderStatus(ctx context.Context, update model.OrderUpdateInfo, uuid string) error {
 	newInfo := converter.FromServiceToRepoUpdateOrder(update)
 
 	builderUpdate := sq.Update("orders").

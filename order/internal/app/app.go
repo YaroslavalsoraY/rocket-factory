@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5/stdlib"
 	"order/internal/config"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
 	"platform/pkg/migrator/pg"
 	order_v1 "shared/pkg/openapi/order/v1"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/stdlib"
+	"go.uber.org/zap"
 )
 
 type App struct {
@@ -32,7 +34,41 @@ func New(ctx context.Context) (*App, error) {
 }
 
 func (a *App) Run(ctx context.Context) error {
-	return a.runHttpServer(ctx)
+	// Канал для ошибок от компонентов
+	errCh := make(chan error, 2)
+
+	// Контекст для остановки всех горутин
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// Консьюмер
+	go func() {
+		if err := a.runConsumer(ctx); err != nil {
+			errCh <- fmt.Errorf("consumer crashed: %v", err)
+		}
+	}()
+
+	// HTTP сервер
+	go func() {
+		if err := a.runHttpServer(ctx); err != nil {
+			errCh <- fmt.Errorf("grpc server crashed: %v", err)
+		}
+	}()
+
+	// Ожидание либо ошибки, либо завершения контекста (например, сигнал SIGINT/SIGTERM)
+	select {
+	case <-ctx.Done():
+		logger.Info(ctx, "Shutdown signal received")
+	case err := <-errCh:
+		logger.Error(ctx, "Component crashed, shutting down", zap.Error(err))
+		// Триггерим cancel, чтобы остановить второй компонент
+		cancel()
+		// Дождись завершения всех задач (если есть graceful shutdown внутри)
+		<-ctx.Done()
+		return err
+	}
+
+	return nil
 }
 
 func (a *App) initDeps(ctx context.Context) error {
@@ -120,6 +156,17 @@ func (a *App) runHttpServer(ctx context.Context) error {
 	logger.Info(ctx, fmt.Sprintf("🚀 HTTP-сервер заказов запущен по адресу %s", config.AppConfig().OrderHttp.HttpAdress()))
 
 	err := a.httpServer.ListenAndServe()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *App) runConsumer(ctx context.Context) error {
+	logger.Info(ctx, "🚀 ShipAssembled Kafka consumer running")
+
+	err := a.diContainer.ConsumerService(ctx).RunConsumer(ctx)
 	if err != nil {
 		return err
 	}

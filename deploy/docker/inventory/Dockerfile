@@ -3,7 +3,7 @@
 # ============================
 
 # Используем официальный образ Go на базе Alpine — лёгкий, быстрый и безопасный
-FROM golang:1.25.6-alpine AS builder
+FROM golang:1.26.4-alpine AS builder
 
 # Устанавливаем git — нужен для загрузки зависимостей из приватных и публичных репозиториев
 RUN apk add --no-cache git
@@ -20,6 +20,7 @@ COPY shared/go.mod shared/go.sum ./shared/
 COPY order/go.mod order/go.sum ./order/
 COPY inventory/go.mod inventory/go.sum ./inventory/
 COPY payment/go.mod payment/go.sum ./payment/
+COPY assembly/go.mod assembly/go.sum ./assembly/
 
 # Загружаем все зависимости, указанные в модульных файлах
 RUN go mod download
@@ -30,6 +31,7 @@ COPY shared ./shared
 COPY order ./order
 COPY inventory ./inventory
 COPY payment ./payment
+COPY assembly ./assembly
 
 # Скачиваем grpc-health-probe — это утилита для проверки состояния gRPC-сервиса
 ADD https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.4.37/grpc_health_probe-linux-amd64 ./grpc-health-probe

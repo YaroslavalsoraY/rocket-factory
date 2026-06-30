@@ -25,54 +25,6 @@ func (_m *OrderRepository) EXPECT() *OrderRepository_Expecter {
 	return &OrderRepository_Expecter{mock: &_m.Mock}
 }
 
-// CancelOrder provides a mock function with given fields: ctx, update, uuid
-func (_m *OrderRepository) CancelOrder(ctx context.Context, update model.OrderUpdateInfo, uuid string) error {
-	ret := _m.Called(ctx, update, uuid)
-
-	if len(ret) == 0 {
-		panic("no return value specified for CancelOrder")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, model.OrderUpdateInfo, string) error); ok {
-		r0 = rf(ctx, update, uuid)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// OrderRepository_CancelOrder_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CancelOrder'
-type OrderRepository_CancelOrder_Call struct {
-	*mock.Call
-}
-
-// CancelOrder is a helper method to define mock.On call
-//   - ctx context.Context
-//   - update model.OrderUpdateInfo
-//   - uuid string
-func (_e *OrderRepository_Expecter) CancelOrder(ctx interface{}, update interface{}, uuid interface{}) *OrderRepository_CancelOrder_Call {
-	return &OrderRepository_CancelOrder_Call{Call: _e.mock.On("CancelOrder", ctx, update, uuid)}
-}
-
-func (_c *OrderRepository_CancelOrder_Call) Run(run func(ctx context.Context, update model.OrderUpdateInfo, uuid string)) *OrderRepository_CancelOrder_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(model.OrderUpdateInfo), args[2].(string))
-	})
-	return _c
-}
-
-func (_c *OrderRepository_CancelOrder_Call) Return(_a0 error) *OrderRepository_CancelOrder_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *OrderRepository_CancelOrder_Call) RunAndReturn(run func(context.Context, model.OrderUpdateInfo, string) error) *OrderRepository_CancelOrder_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // CreateOrder provides a mock function with given fields: ctx, order
 func (_m *OrderRepository) CreateOrder(ctx context.Context, order model.OrderInfo) error {
 	ret := _m.Called(ctx, order)
@@ -221,6 +173,54 @@ func (_c *OrderRepository_PayOrder_Call) Return(_a0 error) *OrderRepository_PayO
 }
 
 func (_c *OrderRepository_PayOrder_Call) RunAndReturn(run func(context.Context, model.OrderUpdateInfo, string) error) *OrderRepository_PayOrder_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateOrderStatus provides a mock function with given fields: ctx, update, uuid
+func (_m *OrderRepository) UpdateOrderStatus(ctx context.Context, update model.OrderUpdateInfo, uuid string) error {
+	ret := _m.Called(ctx, update, uuid)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateOrderStatus")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, model.OrderUpdateInfo, string) error); ok {
+		r0 = rf(ctx, update, uuid)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// OrderRepository_UpdateOrderStatus_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateOrderStatus'
+type OrderRepository_UpdateOrderStatus_Call struct {
+	*mock.Call
+}
+
+// UpdateOrderStatus is a helper method to define mock.On call
+//   - ctx context.Context
+//   - update model.OrderUpdateInfo
+//   - uuid string
+func (_e *OrderRepository_Expecter) UpdateOrderStatus(ctx interface{}, update interface{}, uuid interface{}) *OrderRepository_UpdateOrderStatus_Call {
+	return &OrderRepository_UpdateOrderStatus_Call{Call: _e.mock.On("UpdateOrderStatus", ctx, update, uuid)}
+}
+
+func (_c *OrderRepository_UpdateOrderStatus_Call) Run(run func(ctx context.Context, update model.OrderUpdateInfo, uuid string)) *OrderRepository_UpdateOrderStatus_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(model.OrderUpdateInfo), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *OrderRepository_UpdateOrderStatus_Call) Return(_a0 error) *OrderRepository_UpdateOrderStatus_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *OrderRepository_UpdateOrderStatus_Call) RunAndReturn(run func(context.Context, model.OrderUpdateInfo, string) error) *OrderRepository_UpdateOrderStatus_Call {
 	_c.Call.Return(run)
 	return _c
 }

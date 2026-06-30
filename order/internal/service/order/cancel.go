@@ -21,7 +21,7 @@ func (s *service) CancelOrder(ctx context.Context, uuid string) error {
 		Status: &status,
 	}
 
-	err = s.OrderRepository.CancelOrder(ctx, newInfo, uuid)
+	err = s.OrderRepository.UpdateOrderStatus(ctx, newInfo, uuid)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,10 @@
 package config
 
-import "time"
+import (
+	"time"
+
+	"github.com/IBM/sarama"
+)
 
 type OrderHttpConfig interface {
 	HttpAdress() string
@@ -24,4 +28,19 @@ type PaymentGRPCConfig interface {
 type LoggerConfig interface {
 	Level() string
 	AsJson() bool
+}
+
+type KafkaConfig interface {
+	Brokers() []string
+}
+
+type KafkaProducerConfig interface {
+	TopicName() string
+	Config() *sarama.Config
+}
+
+type KafkaConsumerConfig interface {
+	TopicName() string
+	GroupID() string
+	Config() *sarama.Config
 }

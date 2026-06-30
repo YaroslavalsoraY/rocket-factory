@@ -20,12 +20,12 @@ func (_m *InventoryGRPCConfig) EXPECT() *InventoryGRPCConfig_Expecter {
 	return &InventoryGRPCConfig_Expecter{mock: &_m.Mock}
 }
 
-// Adress provides a mock function with no fields
-func (_m *InventoryGRPCConfig) Adress() string {
+// Address provides a mock function with no fields
+func (_m *InventoryGRPCConfig) Address() string {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for Adress")
+		panic("no return value specified for Address")
 	}
 
 	var r0 string
@@ -38,29 +38,29 @@ func (_m *InventoryGRPCConfig) Adress() string {
 	return r0
 }
 
-// InventoryGRPCConfig_Adress_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Adress'
-type InventoryGRPCConfig_Adress_Call struct {
+// InventoryGRPCConfig_Address_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Address'
+type InventoryGRPCConfig_Address_Call struct {
 	*mock.Call
 }
 
-// Adress is a helper method to define mock.On call
-func (_e *InventoryGRPCConfig_Expecter) Adress() *InventoryGRPCConfig_Adress_Call {
-	return &InventoryGRPCConfig_Adress_Call{Call: _e.mock.On("Adress")}
+// Address is a helper method to define mock.On call
+func (_e *InventoryGRPCConfig_Expecter) Address() *InventoryGRPCConfig_Address_Call {
+	return &InventoryGRPCConfig_Address_Call{Call: _e.mock.On("Address")}
 }
 
-func (_c *InventoryGRPCConfig_Adress_Call) Run(run func()) *InventoryGRPCConfig_Adress_Call {
+func (_c *InventoryGRPCConfig_Address_Call) Run(run func()) *InventoryGRPCConfig_Address_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run()
 	})
 	return _c
 }
 
-func (_c *InventoryGRPCConfig_Adress_Call) Return(_a0 string) *InventoryGRPCConfig_Adress_Call {
+func (_c *InventoryGRPCConfig_Address_Call) Return(_a0 string) *InventoryGRPCConfig_Address_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *InventoryGRPCConfig_Adress_Call) RunAndReturn(run func() string) *InventoryGRPCConfig_Adress_Call {
+func (_c *InventoryGRPCConfig_Address_Call) RunAndReturn(run func() string) *InventoryGRPCConfig_Address_Call {
 	_c.Call.Return(run)
 	return _c
 }

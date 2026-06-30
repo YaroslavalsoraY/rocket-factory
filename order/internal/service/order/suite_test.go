@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	clientMocks "order/internal/client/grpc/mocks"
 	repositoryMock "order/internal/repository/mocks"
+	kafkaMocks "order/internal/service/mocks"
 )
 
 type ServiceSuite struct {
@@ -20,6 +21,8 @@ type ServiceSuite struct {
 
 	paymentClient *clientMocks.PaymentClient
 
+	orderProducer *kafkaMocks.ProducerService
+
 	service *service
 }
 
@@ -32,10 +35,13 @@ func (s *ServiceSuite) SetupTest() {
 
 	s.paymentClient = clientMocks.NewPaymentClient(s.T())
 
+	s.orderProducer = kafkaMocks.NewProducerService(s.T())
+
 	s.service = NewService(
 		s.orderRepository,
 		s.inventoryClient,
 		s.paymentClient,
+		s.orderProducer,
 	)
 }
 
