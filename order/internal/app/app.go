@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/stdlib"
+	"go.uber.org/zap"
 	"order/internal/config"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
 	"platform/pkg/migrator/pg"
 	order_v1 "shared/pkg/openapi/order/v1"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5/stdlib"
-	"go.uber.org/zap"
 )
 
 type App struct {

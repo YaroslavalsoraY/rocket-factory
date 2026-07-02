@@ -2,6 +2,7 @@ package order
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	"order/internal/model"
 )
@@ -34,10 +35,10 @@ func (s *service) PayOrder(ctx context.Context, orderUUID string, paymentMethod 
 	}
 
 	s.orderPaidProducerService.ProduceOrderPaid(ctx, model.OrderPaid{
-		EventUUID: uuid.New().String(),
-		OrderUUID: order.OrderUUID,
-		UserUUID: order.UserUUID,
-		PaymentMethod: string(paymentMethod),
+		EventUUID:       uuid.New().String(),
+		OrderUUID:       order.OrderUUID,
+		UserUUID:        order.UserUUID,
+		PaymentMethod:   string(paymentMethod),
 		TransactionUUID: transactionID,
 	})
 

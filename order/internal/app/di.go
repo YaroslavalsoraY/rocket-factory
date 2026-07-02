@@ -4,6 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/IBM/sarama"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	api "order/internal/api/order/v1"
 	client "order/internal/client/grpc"
 	inventoryClient "order/internal/client/grpc/inventory/v1"
@@ -16,23 +20,16 @@ import (
 	"order/internal/service"
 	order_consumer "order/internal/service/consumer"
 	orderService "order/internal/service/order"
+	producerService "order/internal/service/producer"
 	"platform/pkg/closer"
 	"platform/pkg/kafka"
 	"platform/pkg/kafka/consumer"
 	"platform/pkg/kafka/producer"
 	"platform/pkg/logger"
+	middlewareKafka "platform/pkg/middleware/kafka"
 	order_v1 "shared/pkg/openapi/order/v1"
 	inventory_v1 "shared/pkg/proto/inventory/v1"
 	payment_v1 "shared/pkg/proto/payment/v1"
-
-	middlewareKafka "platform/pkg/middleware/kafka"
-
-	"github.com/IBM/sarama"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
-	producerService "order/internal/service/producer"
 )
 
 type diContainer struct {
@@ -49,9 +46,9 @@ type diContainer struct {
 	consumerGroup         sarama.ConsumerGroup
 	shipAssembledConsumer kafka.Consumer
 
-	shipAssembledDecoder  kafkaConverter.ShipAssembledDecoder
-	syncProducer          sarama.SyncProducer
-	orderPaidProducer kafka.Producer
+	shipAssembledDecoder kafkaConverter.ShipAssembledDecoder
+	syncProducer         sarama.SyncProducer
+	orderPaidProducer    kafka.Producer
 }
 
 func NewDiContainer() *diContainer {

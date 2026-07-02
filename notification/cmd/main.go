@@ -7,14 +7,14 @@ import (
 	"syscall"
 	"time"
 
-	"assembly/internal/app"
-	"assembly/internal/config"
 	"go.uber.org/zap"
+	"notification/internal/app"
+	"notification/internal/config"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
 )
 
-const configPath = "./deploy/compose/assembly/.env"
+const configPath = "./deploy/compose/notification/.env"
 
 func main() {
 	err := config.Load(configPath)
@@ -50,5 +50,3 @@ func gracefulShutdown() {
 		logger.Error(ctx, "❌ Ошибка при завершении работы", zap.Error(err))
 	}
 }
-
-// TODO: доделать обработку assembly-сервисом, сделать ответную отправку от assembly сервера

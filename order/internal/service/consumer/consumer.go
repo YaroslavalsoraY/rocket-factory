@@ -3,12 +3,11 @@ package order_consumer
 import (
 	"context"
 
+	"go.uber.org/zap"
 	kafkaConverter "order/internal/converter/kafka"
 	"order/internal/repository"
 	"platform/pkg/kafka"
 	"platform/pkg/logger"
-
-	"go.uber.org/zap"
 )
 
 type service struct {
@@ -21,16 +20,16 @@ func NewService(shipAssembledConsumer kafka.Consumer, shipAssembledDecoder kafka
 	return &service{
 		shipAssembledConsumer: shipAssembledConsumer,
 		shipAssembledDecoder:  shipAssembledDecoder,
-		orderRepository: orderRepository,
+		orderRepository:       orderRepository,
 	}
 }
 
 func (s *service) RunConsumer(ctx context.Context) error {
-	logger.Info(ctx, "Starting orderPaidConsumer service")
+	logger.Info(ctx, "Starting shipAssembledConsumer service")
 
 	err := s.shipAssembledConsumer.Consume(ctx, s.OrderHandler)
 	if err != nil {
-		logger.Error(ctx, "Consume from order.paid topic error", zap.Error(err))
+		logger.Error(ctx, "Consume from order.assembled topic error", zap.Error(err))
 		return err
 	}
 
