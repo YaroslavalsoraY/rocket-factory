@@ -44,3 +44,7 @@ type KafkaConsumerConfig interface {
 	GroupID() string
 	Config() *sarama.Config
 }
+
+type IamGRPCConfig interface {
+	Address() string
+}

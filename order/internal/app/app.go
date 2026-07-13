@@ -117,6 +117,7 @@ func (a *App) initHttpServer(ctx context.Context) error {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(config.AppConfig().OrderHttp.ShutdownTimeout()))
 	r.Use(middleware.Logger)
+	r.Use(a.diContainer.AuthMiddleware().Handle)
 
 	r.Mount("/", orderServer)
 

@@ -6,6 +6,7 @@ require (
 	github.com/IBM/sarama v1.50.3
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/docker/go-connections v0.6.0
+	github.com/gomodule/redigo v1.9.3
 	github.com/pkg/errors v0.9.1
 	github.com/testcontainers/testcontainers-go v0.41.0
 	go.mongodb.org/mongo-driver v1.17.9

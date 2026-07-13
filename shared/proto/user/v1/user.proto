@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package user.v1;
+
+import "common/v1/user.proto";
+
+option go_package = "shared/pkg/proto/user/v1;user_v1";
+
+service UserService {
+    // Метод для получения пользователя
+    rpc GetUser(GetUserRequest) returns (GetUserResponse);
+
+    // Метод для регистрации пользователя
+    rpc Register(RegisterRequest) returns (RegisterResponse);
+}
+
+// Структура пользователя
+message User {
+    // Id пользователя
+    string id = 1;
+
+    // Логин пользователя
+    string login = 2;
+
+    // Email пользователя
+    string email = 3;
+
+    // Способы оповещен ия пользователя
+    repeated common.v1.NotificationMethod notification_methods = 5;
+}
+
+// Запрос для регистрации пользователя
+message RegisterRequest {
+    // Чувствительные данные пользователя
+    common.v1.User user = 1;
+}
+
+// Ответ сервиса на регистрацию
+message RegisterResponse {
+    // UUID зарегистрированного пользователя
+    string user_uuid = 1;
+}
+
+// Запрос данных пользователя по user_uuid
+message GetUserRequest {
+    // UUID пользователя
+    string user_uuid = 1;
+}
+
+// Данные пользователя
+message GetUserResponse {
+    // Публичные данные пользователя
+    User user = 1;
+}

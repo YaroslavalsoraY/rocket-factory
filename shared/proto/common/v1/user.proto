@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package common.v1;
+
+option go_package = "shared/pkg/proto/common/v1;common_v1";
+
+// Структура пользователя
+message User {
+    // Id пользователя
+    string id = 1;
+
+    // Логин пользователя
+    string login = 2;
+
+    // Email пользователя
+    string email = 3;
+
+    // Пароль пользователя
+    string password = 4;
+
+    // Способы оповещен ия пользователя
+    repeated NotificationMethod notification_methods = 5;
+}
+
+// Структура для хранения метода оповещения пользователя
+message NotificationMethod {
+    // Имя провайдера (например, `telegram`, `email`, `push`)
+    string provider_name = 1;
+
+    // Адрес получателя — email, ID чата и т.д.
+    string target = 2;
+}

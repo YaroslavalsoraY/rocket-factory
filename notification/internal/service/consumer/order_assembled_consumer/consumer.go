@@ -35,5 +35,3 @@ func (s *service) RunConsumer(ctx context.Context) error {
 
 	return nil
 }
-
-// TODO: Implement the logic for handling the order assembled event, сделать отправку уведомления в телеграм

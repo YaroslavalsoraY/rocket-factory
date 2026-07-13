@@ -4,12 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/IBM/sarama"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	api "order/internal/api/order/v1"
 	client "order/internal/client/grpc"
+	iamClient "order/internal/client/grpc/iam/v1"
 	inventoryClient "order/internal/client/grpc/inventory/v1"
 	paymentClient "order/internal/client/grpc/payment/v1"
 	"order/internal/config"
@@ -26,10 +23,17 @@ import (
 	"platform/pkg/kafka/consumer"
 	"platform/pkg/kafka/producer"
 	"platform/pkg/logger"
+	authMiddleware "platform/pkg/middleware/http"
 	middlewareKafka "platform/pkg/middleware/kafka"
 	order_v1 "shared/pkg/openapi/order/v1"
+	iam_v1 "shared/pkg/proto/iam/v1"
 	inventory_v1 "shared/pkg/proto/inventory/v1"
 	payment_v1 "shared/pkg/proto/payment/v1"
+
+	"github.com/IBM/sarama"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type diContainer struct {
@@ -49,6 +53,9 @@ type diContainer struct {
 	shipAssembledDecoder kafkaConverter.ShipAssembledDecoder
 	syncProducer         sarama.SyncProducer
 	orderPaidProducer    kafka.Producer
+
+	iamClient client.IamClient
+	authMiddleware *authMiddleware.AuthMiddleware
 }
 
 func NewDiContainer() *diContainer {
@@ -228,4 +235,31 @@ func (d *diContainer) ProducerService() service.ProducerService {
 	}
 
 	return d.producerService
+}
+
+func (di *diContainer) IamClient() client.IamClient {
+	if di.iamClient == nil {
+		cc, err := grpc.NewClient(config.AppConfig().IamGRPC.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			panic(fmt.Sprintf("failed to connect to iam service: %v", err))
+		}
+
+		closer.AddNamed("connection to iam service", func(ctx context.Context) error {
+			return cc.Close()
+		})
+
+		iamClient := iamClient.NewClient(iam_v1.NewIamServiceClient(cc))
+
+		di.iamClient = iamClient
+	}
+
+	return di.iamClient
+}
+
+func (di *diContainer) AuthMiddleware() *authMiddleware.AuthMiddleware {
+	if di.authMiddleware == nil {
+		di.authMiddleware = authMiddleware.NewAuthMiddleware(di.IamClient())
+	}
+
+	return di.authMiddleware
 }

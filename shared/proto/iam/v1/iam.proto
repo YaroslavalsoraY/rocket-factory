@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package iam.v1;
+
+import "common/v1/session.proto";
+
+option go_package = "shared/pkg/proto/iam/v1;iam_v1";
+
+service IamService {
+    // Метод для получения нового session_uuid. Логин пользователя
+    rpc Login(LoginRequest) returns (LoginResponse);
+
+    // Метод для проверки прав пользователя
+    rpc Whoami(WhoamiRequest) returns (WhoamiResponse);
+}
+
+// Запрос для логина пользователя и получения нового session_uuid
+message LoginRequest {
+    // Логин пользователя
+    string login = 1;
+
+    // Пароль пользователя
+    string password = 2;
+}
+
+// Ответ логина пользователя и отправка нового session_uuid
+message LoginResponse {
+    // Идентификатор сессии
+    string session_uuid = 1;
+}
+
+// Запрос для проверки прав доступа пользователя
+message WhoamiRequest {
+    // Идентификатор сессии
+    string session_uuid = 1;
+}
+
+// Ответ с данными пользователя для последующей проверки прав доступа
+message WhoamiResponse {
+    // активная сессия пользователя
+    common.v1.Session session = 1;
+}

@@ -4,17 +4,24 @@ import (
 	"context"
 	"fmt"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 	api "inventory/internal/api/inventory/v1"
+	clientInterface "inventory/internal/client/grpc"
+	iamClient "inventory/internal/client/grpc/iam/v1"
 	"inventory/internal/config"
 	"inventory/internal/repository"
 	repo "inventory/internal/repository/part"
 	"inventory/internal/service"
 	partService "inventory/internal/service/part"
 	"platform/pkg/closer"
+	iam_v1 "shared/pkg/proto/iam/v1"
 	inventory_v1 "shared/pkg/proto/inventory/v1"
+	interceptor "platform/pkg/middleware/grpc"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type diContainer struct {
@@ -26,10 +33,40 @@ type diContainer struct {
 
 	mongoDBClient *mongo.Client
 	mongoDBHandle *mongo.Database
+
+	iamClient clientInterface.IamClient
+	authInterceptor *interceptor.AuthInterceptor
 }
 
 func NewDiContainer() *diContainer {
 	return &diContainer{}
+}
+
+func (di *diContainer) IamClient() clientInterface.IamClient {
+	if di.iamClient == nil {
+		cc, err := grpc.NewClient(config.AppConfig().IamGRPC.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			panic(fmt.Sprintf("failed to connect to iam service: %v", err))
+		}
+
+		closer.AddNamed("connection to iam service", func(ctx context.Context) error {
+			return cc.Close()
+		})
+
+		iamClient := iamClient.NewClient(iam_v1.NewIamServiceClient(cc))
+
+		di.iamClient = iamClient
+	}
+
+	return di.iamClient
+}
+
+func (di *diContainer) AuthInterceptor() *interceptor.AuthInterceptor {
+	if di.authInterceptor == nil {
+		di.authInterceptor = interceptor.NewAuthInterceptor(di.IamClient())
+	}
+
+	return di.authInterceptor
 }
 
 func (di *diContainer) MongoDBClient(ctx context.Context) *mongo.Client {
