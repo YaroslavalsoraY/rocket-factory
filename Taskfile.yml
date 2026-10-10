@@ -904,3 +904,9 @@ tasks:
           fi
         done
         exit $ERR
+
+  test-e2e:
+    desc: "Проверяет всю цепочку сервисов через локальный Telegram mock"
+    deps: [grpcurl:install]
+    cmds:
+      - python3 tests/e2e/run.py

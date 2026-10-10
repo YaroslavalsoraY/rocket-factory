@@ -26,9 +26,36 @@ func (s *ServiceSuite) TestPayOrder() {
 	s.orderRepository.On("GetOrder", s.ctx, orderUUID).Return(testOrder, nil)
 
 	s.paymentClient.On("PayOrder", s.ctx, orderUUID, userUUID, string(model.PaymentMethodPAYMENTMETHODCARD)).Return(gofakeit.UUID(), nil)
+	s.orderProducer.On("ProduceOrderPaid", s.ctx, mock.MatchedBy(func(event model.OrderPaid) bool {
+		return event.OrderUUID == orderUUID && event.UserUUID == userUUID &&
+			event.PaymentMethod == string(model.PaymentMethodPAYMENTMETHODCARD) &&
+			event.TransactionUUID != "" && event.EventUUID != ""
+	})).Return(nil)
 
-	transactionUUID, err := s.service.PayOrder(s.ctx, orderUUID, model.PaymentMethodPAYMENTMETHODCARD)
+	transactionUUID, err := s.service.PayOrder(s.ctx, orderUUID, userUUID, model.PaymentMethodPAYMENTMETHODCARD)
 
 	s.NoError(err)
 	s.NotEmpty(transactionUUID)
+}
+
+func (s *ServiceSuite) TestPayOrderAnotherUser() {
+	var (
+		orderUUID = gofakeit.UUID()
+		userUUID  = gofakeit.UUID()
+		testOrder = model.OrderInfo{
+			OrderUUID: orderUUID,
+			UserUUID:  gofakeit.UUID(),
+			Status:    model.OrderStatusPENDINGPAYMENT,
+		}
+	)
+
+	s.orderRepository.On("GetOrder", s.ctx, orderUUID).Return(testOrder, nil)
+
+	transactionUUID, err := s.service.PayOrder(s.ctx, orderUUID, userUUID, model.PaymentMethodPAYMENTMETHODCARD)
+
+	s.ErrorIs(err, model.ErrOrderNotFound)
+	s.Empty(transactionUUID)
+	s.paymentClient.AssertNotCalled(s.T(), "PayOrder", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	s.orderRepository.AssertNotCalled(s.T(), "PayOrder", mock.Anything, mock.Anything, mock.Anything)
+	s.orderProducer.AssertNotCalled(s.T(), "ProduceOrderPaid", mock.Anything, mock.Anything)
 }

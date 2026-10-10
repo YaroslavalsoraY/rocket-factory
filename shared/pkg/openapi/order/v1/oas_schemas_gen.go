@@ -82,25 +82,13 @@ func (*ConflictError) cancelOrderRes() {}
 
 // Ref: #/components/schemas/create_order_request
 type CreateOrderRequest struct {
-	// UUID создателя заказа.
-	UserUUID string `json:"user_uuid"`
 	// UUID желаемых деталей.
 	PartUuids []string `json:"part_uuids"`
-}
-
-// GetUserUUID returns the value of UserUUID.
-func (s *CreateOrderRequest) GetUserUUID() string {
-	return s.UserUUID
 }
 
 // GetPartUuids returns the value of PartUuids.
 func (s *CreateOrderRequest) GetPartUuids() []string {
 	return s.PartUuids
-}
-
-// SetUserUUID sets the value of UserUUID.
-func (s *CreateOrderRequest) SetUserUUID(val string) {
-	s.UserUUID = val
 }
 
 // SetPartUuids sets the value of PartUuids.
@@ -591,3 +579,36 @@ func (s *PaymentMethod) UnmarshalText(data []byte) error {
 		return errors.Errorf("invalid value: %q", data)
 	}
 }
+
+// Ref: #/components/schemas/unauthorized_error
+type UnauthorizedError struct {
+	// HTTP-код ошибки.
+	Code int `json:"code"`
+	// Описание ошибки.
+	Message string `json:"message"`
+}
+
+// GetCode returns the value of Code.
+func (s *UnauthorizedError) GetCode() int {
+	return s.Code
+}
+
+// GetMessage returns the value of Message.
+func (s *UnauthorizedError) GetMessage() string {
+	return s.Message
+}
+
+// SetCode sets the value of Code.
+func (s *UnauthorizedError) SetCode(val int) {
+	s.Code = val
+}
+
+// SetMessage sets the value of Message.
+func (s *UnauthorizedError) SetMessage(val string) {
+	s.Message = val
+}
+
+func (*UnauthorizedError) cancelOrderRes()    {}
+func (*UnauthorizedError) createNewOrderRes() {}
+func (*UnauthorizedError) getOrderRes()       {}
+func (*UnauthorizedError) payOrderRes()       {}

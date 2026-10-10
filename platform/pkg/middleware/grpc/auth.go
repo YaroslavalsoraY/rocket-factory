@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	iamV1 "shared/pkg/proto/iam/v1"
 	commonV1 "shared/pkg/proto/common/v1"
+	iamV1 "shared/pkg/proto/iam/v1"
 )
 
 const (
@@ -92,9 +92,9 @@ func (i *AuthInterceptor) authenticate(ctx context.Context) (context.Context, er
 	return authCtx, nil
 }
 
-// GetUserFromContext извлекает пользователя из контекста
-func GetUserFromContext(ctx context.Context) (*commonV1.User, bool) {
-	user, ok := ctx.Value(userContextKey).(*commonV1.User)
+// GetSessionFromContext извлекает пользователя из контекста
+func GetSessionFromContext(ctx context.Context) (*commonV1.Session, bool) {
+	user, ok := ctx.Value(userContextKey).(*commonV1.Session)
 	return user, ok
 }
 

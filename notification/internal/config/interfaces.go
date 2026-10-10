@@ -25,4 +25,5 @@ type KafkaConfig interface {
 
 type TelegramBotConfig interface {
 	Token() string
+	ServerURL() string
 }

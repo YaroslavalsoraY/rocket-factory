@@ -3,7 +3,8 @@ package env
 import "github.com/caarlos0/env/v11"
 
 type telegramBotEnvConfig struct {
-	Token string `env:"TELEGRAM_BOT_TOKEN,required"`
+	Token     string `env:"TELEGRAM_BOT_TOKEN,required"`
+	ServerURL string `env:"TELEGRAM_API_URL"`
 }
 
 type telegramBotConfig struct {
@@ -22,4 +23,8 @@ func NewTelegramBotConfig() (*telegramBotConfig, error) {
 
 func (tbc *telegramBotConfig) Token() string {
 	return tbc.raw.Token
+}
+
+func (tbc *telegramBotConfig) ServerURL() string {
+	return tbc.raw.ServerURL
 }

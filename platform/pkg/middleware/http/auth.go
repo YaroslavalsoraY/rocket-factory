@@ -3,7 +3,7 @@ package http
 import (
 	"context"
 	"net/http"
-	
+
 	grpcAuth "platform/pkg/middleware/grpc"
 	commonV1 "shared/pkg/proto/common/v1"
 	iamV1 "shared/pkg/proto/iam/v1"
@@ -57,8 +57,8 @@ func (m *AuthMiddleware) Handle(next http.Handler) http.Handler {
 }
 
 // GetUserFromContext извлекает пользователя из контекста
-func GetUserFromContext(ctx context.Context) (*commonV1.User, bool) {
-	return grpcAuth.GetUserFromContext(ctx)
+func GetSessionFromContext(ctx context.Context) (*commonV1.Session, bool) {
+	return grpcAuth.GetSessionFromContext(ctx)
 }
 
 // GetSessionUUIDFromContext извлекает session UUID из контекста

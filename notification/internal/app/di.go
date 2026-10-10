@@ -62,7 +62,11 @@ func (d *diContainer) TelegramClient(ctx context.Context) http.TelegramClient {
 
 func (d *diContainer) TelegramBot(ctx context.Context) *bot.Bot {
 	if d.telegramBot == nil {
-		b, err := bot.New(config.AppConfig().TelegramBot.Token())
+		var options []bot.Option
+		if serverURL := config.AppConfig().TelegramBot.ServerURL(); serverURL != "" {
+			options = append(options, bot.WithServerURL(serverURL))
+		}
+		b, err := bot.New(config.AppConfig().TelegramBot.Token(), options...)
 		if err != nil {
 			panic(fmt.Sprintf("failed to create telegram bot: %s\n", err.Error()))
 		}

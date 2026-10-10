@@ -7,8 +7,8 @@ import (
 	"order/internal/model"
 )
 
-func (s *service) PayOrder(ctx context.Context, orderUUID string, paymentMethod model.PaymentMethod) (string, error) {
-	order, err := s.GetOrder(ctx, orderUUID)
+func (s *service) PayOrder(ctx context.Context, orderUUID string, userUUID string, paymentMethod model.PaymentMethod) (string, error) {
+	order, err := s.GetOrder(ctx, orderUUID, userUUID)
 	if err != nil {
 		return "", err
 	}
@@ -19,7 +19,7 @@ func (s *service) PayOrder(ctx context.Context, orderUUID string, paymentMethod 
 
 	transactionID, err := s.paymentClient.PayOrder(ctx, orderUUID, order.UserUUID, string(paymentMethod))
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	status := model.OrderStatusPAID

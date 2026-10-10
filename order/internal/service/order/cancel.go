@@ -6,8 +6,8 @@ import (
 	"order/internal/model"
 )
 
-func (s *service) CancelOrder(ctx context.Context, uuid string) error {
-	order, err := s.OrderRepository.GetOrder(ctx, uuid)
+func (s *service) CancelOrder(ctx context.Context, orderUUID string, userUUID string) error {
+	order, err := s.GetOrder(ctx, orderUUID, userUUID)
 	if err != nil {
 		return err
 	}
@@ -21,7 +21,7 @@ func (s *service) CancelOrder(ctx context.Context, uuid string) error {
 		Status: &status,
 	}
 
-	err = s.OrderRepository.UpdateOrderStatus(ctx, newInfo, uuid)
+	err = s.OrderRepository.UpdateOrderStatus(ctx, newInfo, orderUUID)
 	if err != nil {
 		return err
 	}

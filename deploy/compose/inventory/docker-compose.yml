@@ -19,11 +19,10 @@ services:
   
     healthcheck:
       test:
-        [
-          "CMD-SHELL",
-          "echo 'db.runCommand({ ping: 1 }).ok' | mongosh --quiet -u inventory-service-user -p inventory-service-password --authenticationDatabase admin",
-        ]
-  
+        - CMD-SHELL
+        - >-
+          mongosh --quiet -u "$${MONGO_INITDB_ROOT_USERNAME}" -p "$${MONGO_INITDB_ROOT_PASSWORD}"
+          --authenticationDatabase admin --eval "db.adminCommand({ ping: 1 }).ok" | grep -q '^1$'
       interval: 10s
       timeout: 5s
       retries: 5
