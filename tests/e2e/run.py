@@ -281,6 +281,26 @@ def main():
         assert order["user_uuid"] == state["user"] and order["status"] == "PENDING_PAYMENT"
         print("Order auth/Create/Get: OK", flush=True)
 
+        other_login = f"rocket-e2e-other-{stamp}@example.test"
+        other_user = grpc("user.v1.UserService/Register",
+                          {"user": {"login": other_login, "email": other_login,
+                                    "password": password}})
+        state["other_user"] = str(uuid.UUID(other_user["userUuid"]))
+        other_session = grpc("iam.v1.IamService/Login",
+                             {"login": other_login, "password": password})["sessionUuid"]
+        state["other_session"] = other_session
+        assert_response(http("GET", "/" + state["orders"][0],
+                             session=other_session), 404)
+        assert_response(http("POST", "/" + state["orders"][0] + "/pay",
+                             body={"payment_method": "PAYMENT_METHOD_CARD"},
+                             session=other_session), 404)
+        assert_response(http("POST", "/" + state["orders"][0] + "/cancel",
+                             session=other_session), 404)
+        order = assert_response(http("GET", "/" + state["orders"][0],
+                                     session=session), 200)
+        assert order["status"] == "PENDING_PAYMENT" and not order.get("transaction_uuid")
+        print("Other user cannot get, pay or cancel order: OK", flush=True)
+
         second = assert_response(http("POST", "",
                             body={"user_uuid": str(uuid.uuid4()), "part_uuids": [part]},
                             session=session), 200)
@@ -340,10 +360,18 @@ def main():
             run(["docker", "exec", "redis-iam", "redis-cli", "DEL",
                  "sessions:" + state["session"],
                  "user_sessions:" + state["user"]], check=False)
+        if state.get("other_session"):
+            run(["docker", "exec", "redis-iam", "redis-cli", "DEL",
+                 "sessions:" + state["other_session"],
+                 "user_sessions:" + state["other_user"]], check=False)
         if state.get("user"):
             docker_exec("postgres-iam",
                 'psql -q -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"',
                 input_text=f"DELETE FROM users WHERE id = '{state['user']}';")
+        if state.get("other_user"):
+            docker_exec("postgres-iam",
+                'psql -q -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"',
+                input_text=f"DELETE FROM users WHERE id = '{state['other_user']}';")
         if not args.keep_infra:
             for group in reversed(started):
                 if not preexisting[group]:

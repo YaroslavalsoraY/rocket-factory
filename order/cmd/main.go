@@ -2,15 +2,18 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"go.uber.org/zap"
 	"order/internal/app"
 	"order/internal/config"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
+
+	"go.uber.org/zap"
 )
 
 const configPath = "./deploy/compose/order/.env"
@@ -24,7 +27,7 @@ func main() {
 
 	err := config.Load(configPath)
 	if err != nil {
-		logger.Error(appCtx, "❌ Не удалось создать приложение", zap.Error(err))
+		fmt.Println("❌ Не удалось создать приложение", err.Error())
 		return
 	}
 
@@ -47,5 +50,11 @@ func gracefulShutdown() {
 
 	if err := closer.CloseAll(ctx); err != nil {
 		logger.Error(ctx, "❌ Ошибка при завершении работы", zap.Error(err))
+	}
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+	if err := logger.Shutdown(shutdownCtx); err != nil {
+		log.Printf("failed to flush logs: %v", err)
 	}
 }

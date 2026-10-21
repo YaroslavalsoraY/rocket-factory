@@ -1,5 +1,126 @@
 services: # Раздел, в котором описываются все контейнеры общей инфраструктуры для всех микросервисов
 
+  otel-collector: # Сервис OpenTelemetry Collector для сбора и обработки телеметрии
+    image: otel/opentelemetry-collector-contrib:0.123.0 # Используем официальный образ OpenTelemetry Collector Contrib
+    container_name: otel-collector # Явное имя контейнера
+    command: ["--config=/etc/otel-collector-config.yaml"] # Указываем путь к файлу конфигурации
+    env_file:
+      - .env
+    volumes:
+      - ./otel/otel-collector-config.yaml:/etc/otel-collector-config.yaml # Монтируем конфигурацию коллектора
+    ports:
+      - "${OTEL_GRPC_PORT}:4317" # Порт для протокола OTLP gRPC
+      - "${OTEL_HTTP_PORT}:4318" # Порт для протокола OTLP HTTP
+      - "8888:8888" # Порт для метрик самого коллектора
+      - "8889:8889" # Порт для расширения zpages (дебаг)
+    restart: unless-stopped
+    # Автоматически перезапускаем контейнер при сбоях, но не при ручной остановке
+    networks:
+      - microservices-net
+      # Подключаем контейнер к общей сети микросервисов
+    depends_on:
+      jaeger:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      # Коллектор экспортирует трейсы в Jaeger, а логи в Elasticsearch
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.4
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      xpack.ml.enabled: "false"
+      ES_JAVA_OPTS: "-Xms${ELASTICSEARCH_HEAP_SIZE} -Xmx${ELASTICSEARCH_HEAP_SIZE}"
+    ports:
+      - "${ELASTICSEARCH_PORT}:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - microservices-net
+
+  kibana:
+    image: elastic/kibana:9.0.4
+    environment:
+      ELASTICSEARCH_HOSTS: "http://${ELASTICSEARCH_HOST}:9200"
+      XPACK_SECURITY_ENABLED: "false"
+      SERVER_HOST: 0.0.0.0
+    ports:
+      - "${KIBANA_PORT}:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "/usr/share/kibana/node/glibc-217/bin/node -e \"fetch('http://localhost:5601/api/status').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))\""]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - microservices-net
+
+  kibana-init:
+    image: curlimages/curl:8.13.0
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        curl --fail-with-body --silent --show-error --output /dev/null \
+          --request POST http://${KIBANA_HOST}:5601/api/data_views/data_view \
+          --header 'kbn-xsrf: true' \
+          --header 'Content-Type: application/json' \
+          --data '{"data_view":{"id":"${ELASTICSEARCH_LOGS_INDEX}","name":"Rocket logs","title":"${ELASTICSEARCH_LOGS_INDEX}*","timeFieldName":"@timestamp","allowNoIndex":true},"override":true}'
+        curl --fail-with-body --silent --show-error --output /dev/null \
+          --request POST http://${KIBANA_HOST}:5601/api/data_views/default \
+          --header 'kbn-xsrf: true' \
+          --header 'Content-Type: application/json' \
+          --data '{"data_view_id":"${ELASTICSEARCH_LOGS_INDEX}","force":true}'
+        echo 'Kibana data view ${ELASTICSEARCH_LOGS_INDEX} is ready'
+    depends_on:
+      kibana:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - microservices-net
+
+  jaeger: # Сервис Jaeger для распределенной трассировки
+    image: jaegertracing/jaeger:2.6.0 # Последняя стабильная версия Jaeger v2
+    container_name: jaeger # Имя контейнера для удобного обращения
+    ports:
+      - "${JAEGER_UI_PORT}:16686" # Порт для веб-интерфейса Jaeger UI
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true # Включаем поддержку протокола OpenTelemetry
+      - COLLECTOR_OTLP_HTTP_ENABLED=true # Разрешаем прием данных по HTTP (порт 4318)
+      - COLLECTOR_OTLP_GRPC_ENABLED=true # Разрешаем прием данных по gRPC (порт 4317)
+      - STORAGE_TYPE=badger # Используем Badger как хранилище данных (встроенная key-value БД)
+      - BADGER_EPHEMERAL=false # Сохраняем данные на диск между перезапусками
+      - BADGER_DIRECTORY_VALUE=/badger/data # Директория для хранения значений (спаны, теги, логи)
+      - BADGER_DIRECTORY_KEY=/badger/key # Директория для хранения индексов (для быстрого поиска)
+      - BADGER_MAINTENANCE_INTERVAL=5m # Интервал обслуживания БД (сжатие, очистка, оптимизация)
+      - BADGER_TTL=168h # Время жизни данных (7 дней)
+      - QUERY_BASE_PATH=/jaeger # Базовый путь для UI (если за reverse proxy)
+    volumes:
+      - jaeger_data:/badger/data # Том для хранения данных трейсов
+      - jaeger_key:/badger/key # Том для хранения индексов
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:${JAEGER_UI_PORT}"] # Проверка доступности UI
+      interval: 5s # Интервал проверки
+      timeout: 3s # Таймаут проверки
+      retries: 3 # Количество попыток
+      start_period: 5s # Время ожидания перед началом проверок
+    restart: unless-stopped
+    # Автоматически перезапускаем контейнер при сбоях, но не при ручной остановке
+    networks:
+      - microservices-net
+      # Подключаем контейнер к общей сети микросервисов
+
   kafka: # Сервис Kafka
     image: confluentinc/cp-kafka:7.9.0 # Образ Kafka от компании Confluent, версия 7.9.0 (современная, с поддержкой KRaft)
     container_name: kafka # Явное имя контейнера, чтобы легче обращаться к нему
@@ -113,7 +234,7 @@ services: # Раздел, в котором описываются все кон
       # Гарантируем, что Kafka UI стартует только после того, как Kafka станет healthy.
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -129,7 +250,12 @@ services: # Раздел, в котором описываются все кон
       # Подключаем контейнер к общей сети, в которой живут все сервисы микросервисной архитектуры
 
 volumes: # Раздел с определением томов
+  elasticsearch_data:
   kafka_data: # Именованный том для хранения данных Kafka
+
+  jaeger_data: # Именованный том для хранения данных Jaeger
+  # Хранит данные трассировки
+  jaeger_key: # Именованный том для хранения ключей Jaeger
   # Docker сам управляет этим хранилищем, данные сохраняются между перезапусками контейнеров.
 
 networks:

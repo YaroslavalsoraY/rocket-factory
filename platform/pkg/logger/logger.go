@@ -2,10 +2,18 @@ package logger
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
+	"go.opentelemetry.io/contrib/bridges/otelzap"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
+	"go.opentelemetry.io/otel/sdk/resource"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -21,6 +29,8 @@ var (
 	globalLogger *logger
 	initOnce     sync.Once
 	dynamicLevel zap.AtomicLevel
+	initErr      error
+	logProvider  *sdklog.LoggerProvider
 )
 
 type logger struct {
@@ -40,11 +50,27 @@ func Init(levelStr string, asJSON bool) error {
 			encoder = zapcore.NewConsoleEncoder(encoderCfg)
 		}
 
-		core := zapcore.NewCore(
+		stdoutCore := zapcore.NewCore(
 			encoder,
 			zapcore.AddSync(os.Stdout),
 			dynamicLevel,
 		)
+
+		core := zapcore.Core(stdoutCore)
+		provider, err := newOTLPProvider()
+		if err != nil {
+			initErr = err
+		} else if provider != nil {
+			otelCore := otelzap.NewCore("platform/pkg/logger", otelzap.WithLoggerProvider(provider))
+			filteredCore, filterErr := zapcore.NewIncreaseLevelCore(otelCore, dynamicLevel)
+			if filterErr != nil {
+				initErr = fmt.Errorf("configure OTLP log level: %w", filterErr)
+				_ = provider.Shutdown(context.Background())
+			} else {
+				logProvider = provider
+				core = zapcore.NewTee(stdoutCore, filteredCore)
+			}
+		}
 
 		zapLogger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(2))
 
@@ -53,7 +79,45 @@ func Init(levelStr string, asJSON bool) error {
 		}
 	})
 
-	return nil
+	return initErr
+}
+
+func newOTLPProvider() (*sdklog.LoggerProvider, error) {
+	enabledValue := os.Getenv("LOGGER_OTLP_ENABLED")
+	if enabledValue == "" {
+		return nil, nil
+	}
+
+	enabled, err := strconv.ParseBool(enabledValue)
+	if err != nil {
+		return nil, fmt.Errorf("invalid LOGGER_OTLP_ENABLED: %w", err)
+	}
+	if !enabled {
+		return nil, nil
+	}
+
+	endpoint := os.Getenv("LOGGER_OTLP_ENDPOINT")
+	serviceName := os.Getenv("LOGGER_SERVICE_NAME")
+	if endpoint == "" || serviceName == "" {
+		return nil, errors.New("LOGGER_OTLP_ENDPOINT and LOGGER_SERVICE_NAME are required when OTLP logging is enabled")
+	}
+
+	exporter, err := otlploggrpc.New(context.Background(),
+		otlploggrpc.WithEndpoint(endpoint),
+		otlploggrpc.WithInsecure(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("create OTLP log exporter: %w", err)
+	}
+
+	res := resource.NewWithAttributes("",
+		attribute.String("service.name", serviceName),
+		attribute.String("deployment.environment", os.Getenv("LOGGER_ENVIRONMENT")),
+	)
+	return sdklog.NewLoggerProvider(
+		sdklog.WithResource(res),
+		sdklog.WithProcessor(sdklog.NewBatchProcessor(exporter)),
+	), nil
 }
 
 func SetLevel(levelStr string) {
@@ -76,19 +140,30 @@ func SetNopLogger() {
 
 func Sync() error {
 	if globalLogger != nil {
-		return globalLogger.zapLogger.Sync()
+		err := globalLogger.zapLogger.Sync()
+		if logProvider != nil {
+			err = errors.Join(err, logProvider.ForceFlush(context.Background()))
+		}
+		return err
 	}
 
 	return nil
 }
 
-func With(fileds ...zap.Field) *logger {
+func Shutdown(ctx context.Context) error {
+	if logProvider == nil {
+		return nil
+	}
+	return logProvider.Shutdown(ctx)
+}
+
+func With(fields ...zap.Field) *logger {
 	if globalLogger == nil {
 		return &logger{zapLogger: zap.NewNop()}
 	}
 
 	return &logger{
-		zapLogger: globalLogger.zapLogger.With(fileds...),
+		zapLogger: globalLogger.zapLogger.WithOptions(zap.AddCallerSkip(-1)).With(fields...),
 	}
 }
 
@@ -98,7 +173,7 @@ func WithContext(ctx context.Context) *logger {
 	}
 
 	return &logger{
-		zapLogger: globalLogger.zapLogger.With(fieldsFromContext(ctx)...),
+		zapLogger: globalLogger.zapLogger.WithOptions(zap.AddCallerSkip(-1)).With(fieldsFromContext(ctx)...),
 	}
 }
 

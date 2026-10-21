@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os/signal"
 	"syscall"
 	"time"
@@ -47,5 +48,11 @@ func gracefulShutdown() {
 
 	if err := closer.CloseAll(ctx); err != nil {
 		logger.Error(ctx, "❌ Ошибка при завершении работы", zap.Error(err))
+	}
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+	if err := logger.Shutdown(shutdownCtx); err != nil {
+		log.Printf("failed to flush logs: %v", err)
 	}
 }

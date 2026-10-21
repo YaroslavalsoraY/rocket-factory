@@ -31,6 +31,16 @@ process_template() {
   local service=$1
   local template="$TEMPLATE_DIR/${service}.env.template"
   local output="$COMPOSE_DIR/${service}/.env"
+
+  if [ "$service" = "core" ]; then
+    local required_key
+    for required_key in CORE_ELASTICSEARCH_HOST CORE_ELASTICSEARCH_PORT CORE_ELASTICSEARCH_HEAP_SIZE CORE_ELASTICSEARCH_LOGS_INDEX CORE_KIBANA_HOST CORE_KIBANA_PORT; do
+      if [ -z "${!required_key:-}" ]; then
+        echo "❌ Укажите $required_key в $SCRIPT_DIR/.env"
+        return 1
+      fi
+    done
+  fi
   
   echo "Обработка шаблона для сервиса $service..."
   
@@ -46,6 +56,24 @@ process_template() {
   $ENV_SUBST < "$template" > "$output"
   
   echo "✅ Создан файл $output"
+
+  if [ "$service" = "core" ]; then
+    local otel_template="$COMPOSE_DIR/core/otel/otel-collector-config.template.yaml"
+    local otel_output="$COMPOSE_DIR/core/otel/otel-collector-config.yaml"
+
+    if [ -f "$otel_template" ]; then
+      if ! (
+        set -a
+        source "$output"
+        set +a
+        "$ENV_SUBST" < "$otel_template" > "$otel_output"
+      ); then
+        echo "❌ Не удалось создать $otel_output"
+        return 1
+      fi
+      echo "✅ Создан файл $otel_output"
+    fi
+  fi
 }
 
 # Определяем список сервисов из переменной окружения
@@ -62,7 +90,7 @@ echo "🔍 Обрабатываем сервисы: ${services[*]}"
 success_count=0
 skip_count=0
 for service in "${services[@]}"; do
-  process_template "$service"
+  process_template "$service" || exit 1
   if [ -f "$TEMPLATE_DIR/${service}.env.template" ]; then
     ((success_count++))
   else
@@ -74,4 +102,4 @@ if [ $success_count -eq 0 ]; then
   echo "⚠️ Ни один .env файл не создан. Проверьте список сервисов и наличие шаблонов."
 else
   echo "🎉 Генерация завершена: $success_count файлов создано, $skip_count шаблонов пропущено"
-fi 
+fi

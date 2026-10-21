@@ -853,7 +853,7 @@ tasks:
         echo "✅ envsubst установлен: {{.ENVSUBST}}"
 
   env:generate:
-    desc: "Генерирует .env файлы для всех сервисов из шаблонов и единого файла конфигурации"
+    desc: "Генерирует .env сервисов и конфигурацию Collector из шаблонов"
     deps: [ env:install-envsubst ]
     cmds:
       - |
