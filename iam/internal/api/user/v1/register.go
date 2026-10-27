@@ -3,12 +3,12 @@ package user_v1
 import (
 	"context"
 	"errors"
-	"iam/internal/converter"
-	"iam/internal/model"
-	user_v1 "shared/pkg/proto/user/v1"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"iam/internal/converter"
+	"iam/internal/model"
+	user_v1 "shared/pkg/proto/user/v1"
 )
 
 func (ua *UserApi) Register(ctx context.Context, req *user_v1.RegisterRequest) (*user_v1.RegisterResponse, error) {

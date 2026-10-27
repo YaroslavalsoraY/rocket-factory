@@ -3,12 +3,12 @@ package user
 import (
 	"context"
 	"errors"
-	"iam/internal/model"
-	"platform/pkg/logger"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+	"iam/internal/model"
+	"platform/pkg/logger"
 )
 
 func (us *UserService) Register(ctx context.Context, user model.User) (string, error) {
@@ -21,7 +21,7 @@ func (us *UserService) Register(ctx context.Context, user model.User) (string, e
 	}
 
 	user.Password = hashedPassword
-	
+
 	userUUID, err := us.userRepository.Create(ctx, user)
 	if err != nil {
 		var pgErr *pgconn.PgError

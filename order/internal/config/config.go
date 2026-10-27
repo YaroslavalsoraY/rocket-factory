@@ -16,7 +16,8 @@ type config struct {
 	KafkaProducer KafkaProducerConfig
 	KafkaConsumer KafkaConsumerConfig
 	Kafka         KafkaConfig
-	IamGRPC 		  IamGRPCConfig
+	IamGRPC       IamGRPCConfig
+	OtelTracer    OtelTracerConfig
 }
 
 func Load(path ...string) error {
@@ -70,6 +71,11 @@ func Load(path ...string) error {
 		return err
 	}
 
+	otelTracer, err := env.NewOtelTracerConfig()
+	if err != nil {
+		return err
+	}
+
 	appConfig = &config{
 		OrderHttp:     orderHttp,
 		Postgres:      postgres,
@@ -79,7 +85,8 @@ func Load(path ...string) error {
 		Kafka:         kafka,
 		KafkaProducer: kafkaProducer,
 		KafkaConsumer: kafkaConsumer,
-		IamGRPC: iam,
+		IamGRPC:       iam,
+		OtelTracer:    otelTracer,
 	}
 
 	return nil

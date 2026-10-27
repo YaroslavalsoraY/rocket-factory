@@ -8,11 +8,13 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/stdlib"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 	"order/internal/config"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
 	"platform/pkg/migrator/pg"
+	"platform/pkg/tracing"
 	order_v1 "shared/pkg/openapi/order/v1"
 )
 
@@ -75,6 +77,7 @@ func (a *App) initDeps(ctx context.Context) error {
 		a.initDi,
 		a.initLogger,
 		a.initCloser,
+		a.InitTracer,
 		a.initHttpServer,
 		a.initMigrations,
 	}
@@ -91,6 +94,17 @@ func (a *App) initDeps(ctx context.Context) error {
 
 func (a *App) initDi(_ context.Context) error {
 	a.diContainer = NewDiContainer()
+	return nil
+}
+
+func (a *App) InitTracer(ctx context.Context) error {
+	err := tracing.InitTracer(ctx, config.AppConfig().OtelTracer)
+	if err != nil {
+		return err
+	}
+
+	closer.AddNamed("Tracer", tracing.ShutdownTracer)
+
 	return nil
 }
 
@@ -123,7 +137,7 @@ func (a *App) initHttpServer(ctx context.Context) error {
 
 	server := &http.Server{
 		Addr:              config.AppConfig().OrderHttp.HttpAdress(),
-		Handler:           r,
+		Handler:           otelhttp.NewHandler(r, "order.http"),
 		ReadHeaderTimeout: config.AppConfig().OrderHttp.HeaderTimeout(),
 	}
 

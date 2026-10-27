@@ -2,19 +2,18 @@ package user
 
 import (
 	"context"
-	"iam/internal/model"
-
-	"iam/internal/repository/converter"
-	repoModel "iam/internal/repository/model"
 
 	sq "github.com/Masterminds/squirrel"
+	"iam/internal/model"
+	"iam/internal/repository/converter"
+	repoModel "iam/internal/repository/model"
 )
 
 func (ur *UserRepository) Get(ctx context.Context, userUUID string) (model.User, error) {
 	builderSelect := sq.Select("id", "login", "email", "notification_methods").
-	From("users").
-	PlaceholderFormat(sq.Dollar).
-	Where(sq.Eq{"id": userUUID})
+		From("users").
+		PlaceholderFormat(sq.Dollar).
+		Where(sq.Eq{"id": userUUID})
 
 	query, args, err := builderSelect.ToSql()
 	if err != nil {
@@ -40,9 +39,9 @@ func (ur *UserRepository) Get(ctx context.Context, userUUID string) (model.User,
 
 func (ur *UserRepository) GetAuthInfo(ctx context.Context, login string) (model.AuthInfo, error) {
 	builderSelect := sq.Select("email", "id", "password").
-	From("users").
-	PlaceholderFormat(sq.Dollar).
-	Where(sq.Eq{"login": login})
+		From("users").
+		PlaceholderFormat(sq.Dollar).
+		Where(sq.Eq{"login": login})
 
 	query, args, err := builderSelect.ToSql()
 	if err != nil {

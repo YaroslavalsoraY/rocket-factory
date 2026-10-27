@@ -2,9 +2,9 @@ package grpc
 
 import (
 	"context"
-	iam_v1 "shared/pkg/proto/iam/v1"
 
 	"google.golang.org/grpc"
+	iam_v1 "shared/pkg/proto/iam/v1"
 )
 
 type IamClient interface {

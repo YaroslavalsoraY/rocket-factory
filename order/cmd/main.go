@@ -8,12 +8,11 @@ import (
 	"syscall"
 	"time"
 
+	"go.uber.org/zap"
 	"order/internal/app"
 	"order/internal/config"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
-
-	"go.uber.org/zap"
 )
 
 const configPath = "./deploy/compose/order/.env"

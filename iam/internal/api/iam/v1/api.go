@@ -9,12 +9,12 @@ type IamApi struct {
 	iam_v1.UnimplementedIamServiceServer
 
 	sessionService service.IamService
-	userService service.UserService
+	userService    service.UserService
 }
 
-func NewIamApi(sessionService service.IamService, userService service.UserService) *IamApi{
+func NewIamApi(sessionService service.IamService, userService service.UserService) *IamApi {
 	return &IamApi{
 		sessionService: sessionService,
-		userService: userService,
+		userService:    userService,
 	}
 }

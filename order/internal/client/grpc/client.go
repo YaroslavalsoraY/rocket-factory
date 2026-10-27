@@ -2,11 +2,10 @@ package grpc
 
 import (
 	"context"
-	iam_v1 "shared/pkg/proto/iam/v1"
-
-	"order/internal/model"
 
 	"google.golang.org/grpc"
+	"order/internal/model"
+	iam_v1 "shared/pkg/proto/iam/v1"
 )
 
 type InventoryClient interface {

@@ -7,7 +7,6 @@ import (
 
 	redigo "github.com/gomodule/redigo/redis"
 	"github.com/jackc/pgx/v5/pgxpool"
-
 	iam_v1 "iam/internal/api/iam/v1"
 	user_v1 "iam/internal/api/user/v1"
 	"iam/internal/config"
@@ -36,7 +35,7 @@ type diContainer struct {
 	userService service.UserService
 
 	userApi *user_v1.UserApi
-	iamApi *iam_v1.IamApi
+	iamApi  *iam_v1.IamApi
 }
 
 func NewDiContainer() *diContainer {

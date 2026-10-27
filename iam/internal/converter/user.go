@@ -11,12 +11,12 @@ func UserFromProto(protoUser *common_v1.User) model.User {
 	for _, el := range protoUser.NotificationMethods {
 		notificationMethods[el.ProviderName] = el.Target
 	}
-	
+
 	return model.User{
-		ID: protoUser.Id,
-		Login: protoUser.Login,
-		Password: protoUser.Password,
-		Email: protoUser.Email,
+		ID:                  protoUser.Id,
+		Login:               protoUser.Login,
+		Password:            protoUser.Password,
+		Email:               protoUser.Email,
 		NotificationMethods: notificationMethods,
 	}
 }
@@ -28,9 +28,9 @@ func UserToProto(user model.User) *user_v1.User {
 	}
 
 	return &user_v1.User{
-		Id: user.ID,
-		Login: user.Login,
-		Email: user.Email,
+		Id:                  user.ID,
+		Login:               user.Login,
+		Email:               user.Email,
 		NotificationMethods: notificationMethods,
 	}
 }

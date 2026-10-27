@@ -13,7 +13,7 @@ func (a *OrderAPI) CreateNewOrder(ctx context.Context, req *order_v1.CreateOrder
 	verifiedUser, ok := httpAuth.GetSessionFromContext(ctx)
 	if !ok || verifiedUser.UserId == "" {
 		return &order_v1.UnauthorizedError{
-			Code: 401,
+			Code:    401,
 			Message: model.ErrUnauthorized.Error(),
 		}, nil
 	}

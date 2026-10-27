@@ -3,10 +3,10 @@ package iam
 import (
 	"context"
 	"errors"
-	"iam/internal/model"
 
 	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
+	"iam/internal/model"
 )
 
 func (iam *IamService) Login(ctx context.Context, login, password string) (string, error) {
@@ -20,16 +20,16 @@ func (iam *IamService) Login(ctx context.Context, login, password string) (strin
 
 	if compareHashWithPassword(authInfo.HashedPassword, password) {
 		return iam.sessionRepository.Create(ctx, model.Session{
-			UserUUID: authInfo.UserUUID, 
-			Login: authInfo.Login, 
-			Email: authInfo.Email,
+			UserUUID: authInfo.UserUUID,
+			Login:    authInfo.Login,
+			Email:    authInfo.Email,
 		})
 	}
 
 	return "", model.ErrUnauthorized
 }
 
-func compareHashWithPassword(hashedPassword string, password string) bool {
+func compareHashWithPassword(hashedPassword, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	if err != nil {
 		return false

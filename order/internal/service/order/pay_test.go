@@ -21,12 +21,12 @@ func (s *ServiceSuite) TestPayOrder() {
 		}
 	)
 
-	s.orderRepository.On("PayOrder", s.ctx, mock.Anything, orderUUID).Return(nil)
+	s.orderRepository.On("PayOrder", mock.Anything, mock.Anything, orderUUID).Return(nil)
 
-	s.orderRepository.On("GetOrder", s.ctx, orderUUID).Return(testOrder, nil)
+	s.orderRepository.On("GetOrder", mock.Anything, orderUUID).Return(testOrder, nil)
 
-	s.paymentClient.On("PayOrder", s.ctx, orderUUID, userUUID, string(model.PaymentMethodPAYMENTMETHODCARD)).Return(gofakeit.UUID(), nil)
-	s.orderProducer.On("ProduceOrderPaid", s.ctx, mock.MatchedBy(func(event model.OrderPaid) bool {
+	s.paymentClient.On("PayOrder", mock.Anything, orderUUID, userUUID, string(model.PaymentMethodPAYMENTMETHODCARD)).Return(gofakeit.UUID(), nil)
+	s.orderProducer.On("ProduceOrderPaid", mock.Anything, mock.MatchedBy(func(event model.OrderPaid) bool {
 		return event.OrderUUID == orderUUID && event.UserUUID == userUUID &&
 			event.PaymentMethod == string(model.PaymentMethodPAYMENTMETHODCARD) &&
 			event.TransactionUUID != "" && event.EventUUID != ""
@@ -49,7 +49,7 @@ func (s *ServiceSuite) TestPayOrderAnotherUser() {
 		}
 	)
 
-	s.orderRepository.On("GetOrder", s.ctx, orderUUID).Return(testOrder, nil)
+	s.orderRepository.On("GetOrder", mock.Anything, orderUUID).Return(testOrder, nil)
 
 	transactionUUID, err := s.service.PayOrder(s.ctx, orderUUID, userUUID, model.PaymentMethodPAYMENTMETHODCARD)
 

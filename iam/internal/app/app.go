@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/jackc/pgx/v5/stdlib"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 	"iam/internal/config"
 	"platform/pkg/closer"
 	"platform/pkg/grpc/health"
@@ -12,11 +16,6 @@ import (
 	"platform/pkg/migrator/pg"
 	iam_v1 "shared/pkg/proto/iam/v1"
 	user_v1 "shared/pkg/proto/user/v1"
-
-	"github.com/jackc/pgx/v5/stdlib"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/reflection"
 )
 
 type App struct {

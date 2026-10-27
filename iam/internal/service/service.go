@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"iam/internal/model"
 )
 
@@ -10,7 +11,7 @@ type IamService interface {
 	WhoAmI(ctx context.Context, sessionUUID string) (model.Session, error)
 }
 
-type UserService interface {	
+type UserService interface {
 	Register(ctx context.Context, user model.User) (string, error)
 	GetUser(ctx context.Context, userUUID string) (model.User, error)
 }

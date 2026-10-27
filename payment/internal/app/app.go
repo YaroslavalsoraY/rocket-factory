@@ -12,6 +12,7 @@ import (
 	"platform/pkg/closer"
 	"platform/pkg/grpc/health"
 	"platform/pkg/logger"
+	"platform/pkg/tracing"
 	payment_v1 "shared/pkg/proto/payment/v1"
 )
 
@@ -42,6 +43,7 @@ func (a *App) initDeps(ctx context.Context) error {
 		a.initLogger,
 		a.initCloser,
 		a.initListener,
+		a.InitTracer,
 		a.initGRPCServer,
 	}
 
@@ -57,6 +59,17 @@ func (a *App) initDeps(ctx context.Context) error {
 
 func (a *App) initDI(_ context.Context) error {
 	a.diContainer = NewDiContainer()
+	return nil
+}
+
+func (a *App) InitTracer(ctx context.Context) error {
+	err := tracing.InitTracer(ctx, config.AppConfig().OtelTracer)
+	if err != nil {
+		return err
+	}
+
+	closer.AddNamed("Tracer", tracing.ShutdownTracer)
+
 	return nil
 }
 
@@ -93,7 +106,10 @@ func (a *App) initListener(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-	a.grpcServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+	a.grpcServer = grpc.NewServer(
+		grpc.Creds(insecure.NewCredentials()),
+		grpc.ChainUnaryInterceptor(tracing.UnaryServerInterceptor("payment-service")),
+	)
 
 	closer.AddNamed("gRPC server", func(ctx context.Context) error {
 		a.grpcServer.GracefulStop()

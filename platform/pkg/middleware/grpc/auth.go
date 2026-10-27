@@ -8,7 +8,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-
 	commonV1 "shared/pkg/proto/common/v1"
 	iamV1 "shared/pkg/proto/iam/v1"
 )

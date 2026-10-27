@@ -8,11 +8,11 @@ import (
 )
 
 type redisEnvConfig struct {
-	Host          string `env:"REDIS_HOST,required"`
-	Port          string `env:"EXTERNAL_REDIS_PORT,required"`
-	MaxIdle       int `env:"REDIS_MAX_IDLE,required"`
-	Timeout       time.Duration `env:"REDIS_CONNECTION_TIMEOUT,required"`
-	IdleTimeout   time.Duration `env:"REDIS_IDLE_TIMEOUT,required"`
+	Host        string        `env:"REDIS_HOST,required"`
+	Port        string        `env:"EXTERNAL_REDIS_PORT,required"`
+	MaxIdle     int           `env:"REDIS_MAX_IDLE,required"`
+	Timeout     time.Duration `env:"REDIS_CONNECTION_TIMEOUT,required"`
+	IdleTimeout time.Duration `env:"REDIS_IDLE_TIMEOUT,required"`
 }
 
 type redisConfig struct {

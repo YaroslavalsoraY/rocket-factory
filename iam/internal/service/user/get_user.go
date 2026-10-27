@@ -3,11 +3,11 @@ package user
 import (
 	"context"
 	"errors"
-	"iam/internal/model"
-	"platform/pkg/logger"
 
 	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
+	"iam/internal/model"
+	"platform/pkg/logger"
 )
 
 func (us *UserService) GetUser(ctx context.Context, userUUID string) (model.User, error) {

@@ -3,12 +3,12 @@ package user_v1
 import (
 	"context"
 	"errors"
-	"iam/internal/converter"
-	"iam/internal/model"
-	user_v1 "shared/pkg/proto/user/v1"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"iam/internal/converter"
+	"iam/internal/model"
+	user_v1 "shared/pkg/proto/user/v1"
 )
 
 func (ua *UserApi) GetUser(ctx context.Context, req *user_v1.GetUserRequest) (*user_v1.GetUserResponse, error) {
@@ -21,6 +21,5 @@ func (ua *UserApi) GetUser(ctx context.Context, req *user_v1.GetUserRequest) (*u
 		return nil, status.Error(codes.Internal, model.ErrInternal.Error())
 	}
 
-	return &user_v1.GetUserResponse{User: converter.UserToProto(user)}, nil	
+	return &user_v1.GetUserResponse{User: converter.UserToProto(user)}, nil
 }
-

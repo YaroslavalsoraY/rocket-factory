@@ -48,3 +48,10 @@ type KafkaConsumerConfig interface {
 type IamGRPCConfig interface {
 	Address() string
 }
+
+type OtelTracerConfig interface {
+	CollectorEndpoint() string
+	ServiceName() string
+	Environment() string
+	ServiceVersion() string
+}

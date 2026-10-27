@@ -44,7 +44,7 @@ func Load(path ...string) error {
 		InventoryGRPC: inventoryGRPC,
 		Mongo:         mongo,
 		Logger:        logger,
-		IamGRPC: 	   iam,
+		IamGRPC:       iam,
 	}
 
 	return nil

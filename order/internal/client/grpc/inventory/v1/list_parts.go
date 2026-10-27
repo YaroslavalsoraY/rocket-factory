@@ -3,12 +3,11 @@ package client
 import (
 	"context"
 
+	"google.golang.org/grpc/metadata"
 	"order/internal/client/converter"
 	"order/internal/model"
-	inventory_v1 "shared/pkg/proto/inventory/v1"
-
 	grpcAuth "platform/pkg/middleware/grpc"
-	"google.golang.org/grpc/metadata"
+	inventory_v1 "shared/pkg/proto/inventory/v1"
 )
 
 func (c *client) ListParts(ctx context.Context, filter model.Filters) ([]*model.PartInfo, error) {

@@ -13,8 +13,8 @@ type RedisClient interface {
 	HGetAll(ctx context.Context, key string) ([]any, error)
 	HSetEx(ctx context.Context, key string, values any, expiration time.Duration) error
 	HKeys(ctx context.Context, key string) ([]any, error)
-	HExists(ctx context.Context, key string, field string) (bool, error)
-	HGet(ctx context.Context, key string, field string) (any, error)
+	HExists(ctx context.Context, key, field string) (bool, error)
+	HGet(ctx context.Context, key, field string) (any, error)
 	Del(ctx context.Context, key string) error
 	Exists(ctx context.Context, key string) (bool, error)
 	Expire(ctx context.Context, key string, expiration time.Duration) error

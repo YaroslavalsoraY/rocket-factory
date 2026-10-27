@@ -3,9 +3,9 @@ package iam
 import (
 	"context"
 	"errors"
-	"iam/internal/model"
 
 	"github.com/gomodule/redigo/redis"
+	"iam/internal/model"
 )
 
 func (iam *IamService) WhoAmI(ctx context.Context, sessionUUID string) (model.Session, error) {

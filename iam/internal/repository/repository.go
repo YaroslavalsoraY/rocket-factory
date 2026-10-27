@@ -2,11 +2,12 @@ package repository
 
 import (
 	"context"
+
 	"iam/internal/model"
 )
 
 type SessionRepository interface {
-	AddSessionToUserSet(ctx context.Context, userUUID string, sessionToken string) error
+	AddSessionToUserSet(ctx context.Context, userUUID, sessionToken string) error
 	GetUserSessions(ctx context.Context, userUUID string) ([]model.Session, error)
 	Create(ctx context.Context, session model.Session) (string, error)
 	Get(ctx context.Context, sessionUUID string) (model.Session, error)

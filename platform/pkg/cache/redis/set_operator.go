@@ -17,7 +17,7 @@ func (c *client) SRem(ctx context.Context, key string, value ...string) error {
 	if len(value) == 0 {
 		return nil
 	}
-	
+
 	return c.withConn(ctx, func(ctx context.Context, conn redigo.Conn) error {
 		_, err := conn.Do("SREM", redigo.Args{key}.AddFlat(value)...)
 		return err

@@ -2,11 +2,11 @@ package user
 
 import (
 	"context"
-	"iam/internal/model"
-	"iam/internal/repository/converter"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
+	"iam/internal/model"
+	"iam/internal/repository/converter"
 )
 
 func (ur *UserRepository) Create(ctx context.Context, user model.User) (string, error) {
@@ -15,9 +15,9 @@ func (ur *UserRepository) Create(ctx context.Context, user model.User) (string, 
 	userUUID := uuid.New().String()
 
 	builderInsert := sq.Insert("users").
-	Columns("id", "login", "password", "email", "notification_methods").
-	PlaceholderFormat(sq.Dollar).
-	Values(userUUID, repoUser.Login, repoUser.Password, repoUser.Email, repoUser.NotificationMethods)
+		Columns("id", "login", "password", "email", "notification_methods").
+		PlaceholderFormat(sq.Dollar).
+		Values(userUUID, repoUser.Login, repoUser.Password, repoUser.Email, repoUser.NotificationMethods)
 
 	query, args, err := builderInsert.ToSql()
 	if err != nil {

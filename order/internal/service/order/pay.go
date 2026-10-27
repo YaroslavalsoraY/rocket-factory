@@ -5,9 +5,13 @@ import (
 
 	"github.com/google/uuid"
 	"order/internal/model"
+	"platform/pkg/tracing"
 )
 
-func (s *service) PayOrder(ctx context.Context, orderUUID string, userUUID string, paymentMethod model.PaymentMethod) (string, error) {
+func (s *service) PayOrder(ctx context.Context, orderUUID, userUUID string, paymentMethod model.PaymentMethod) (string, error) {
+	ctx, span := tracing.StartSpan(ctx, "OrderService.PayOrder")
+	defer span.End()
+
 	order, err := s.GetOrder(ctx, orderUUID, userUUID)
 	if err != nil {
 		return "", err

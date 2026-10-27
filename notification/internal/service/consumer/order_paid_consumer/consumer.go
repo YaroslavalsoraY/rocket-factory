@@ -5,9 +5,9 @@ import (
 
 	"go.uber.org/zap"
 	kafkaConverter "notification/internal/converter/kafka"
+	def "notification/internal/service"
 	"platform/pkg/kafka"
 	"platform/pkg/logger"
-	def "notification/internal/service"
 )
 
 type service struct {

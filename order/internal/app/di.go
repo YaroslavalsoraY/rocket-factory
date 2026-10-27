@@ -4,6 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/IBM/sarama"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	api "order/internal/api/order/v1"
 	client "order/internal/client/grpc"
 	iamClient "order/internal/client/grpc/iam/v1"
@@ -25,15 +29,11 @@ import (
 	"platform/pkg/logger"
 	authMiddleware "platform/pkg/middleware/http"
 	middlewareKafka "platform/pkg/middleware/kafka"
+	"platform/pkg/tracing"
 	order_v1 "shared/pkg/openapi/order/v1"
 	iam_v1 "shared/pkg/proto/iam/v1"
 	inventory_v1 "shared/pkg/proto/inventory/v1"
 	payment_v1 "shared/pkg/proto/payment/v1"
-
-	"github.com/IBM/sarama"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type diContainer struct {
@@ -54,7 +54,7 @@ type diContainer struct {
 	syncProducer         sarama.SyncProducer
 	orderPaidProducer    kafka.Producer
 
-	iamClient client.IamClient
+	iamClient      client.IamClient
 	authMiddleware *authMiddleware.AuthMiddleware
 }
 
@@ -107,7 +107,11 @@ func (di *diContainer) InventoryClient(ctx context.Context) client.InventoryClie
 
 func (di *diContainer) PaymentClient(ctx context.Context) client.PaymentClient {
 	if di.paymentClient == nil {
-		cc, err := grpc.NewClient(config.AppConfig().PaymentGRPC.PaymentAdress(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+		cc, err := grpc.NewClient(
+			config.AppConfig().PaymentGRPC.PaymentAdress(),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithChainUnaryInterceptor(tracing.UnaryClientInterceptor("payment-service")),
+		)
 		if err != nil {
 			panic(fmt.Sprintf("failed to connect to payment service: %v", err))
 		}

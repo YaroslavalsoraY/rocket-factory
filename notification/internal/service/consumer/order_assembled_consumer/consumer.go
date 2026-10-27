@@ -2,10 +2,10 @@ package order_assembled_consumer
 
 import (
 	"context"
-	def "notification/internal/service"
 
 	"go.uber.org/zap"
 	kafkaConverter "notification/internal/converter/kafka"
+	def "notification/internal/service"
 	"platform/pkg/kafka"
 	"platform/pkg/logger"
 )

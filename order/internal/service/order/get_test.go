@@ -6,17 +6,15 @@ import (
 )
 
 func (s *ServiceSuite) TestGetOrder() {
-	var (
-		testOrder = model.OrderInfo{
-			OrderUUID:         gofakeit.UUID(),
-			UserUUID:          gofakeit.UUID(),
-			PartUuids:         []string{gofakeit.UUID()},
-			TotalPrice:        gofakeit.Float64Range(1, 99999),
-			TransactionalUUID: gofakeit.UUID(),
-			PaymentMethod:     model.PaymentMethodPAYMENTMETHODCREDITCARD,
-			Status:            model.OrderStatusPAID,
-		}
-	)
+	testOrder := model.OrderInfo{
+		OrderUUID:         gofakeit.UUID(),
+		UserUUID:          gofakeit.UUID(),
+		PartUuids:         []string{gofakeit.UUID()},
+		TotalPrice:        gofakeit.Float64Range(1, 99999),
+		TransactionalUUID: gofakeit.UUID(),
+		PaymentMethod:     model.PaymentMethodPAYMENTMETHODCREDITCARD,
+		Status:            model.OrderStatusPAID,
+	}
 
 	s.orderRepository.On("GetOrder", s.ctx, testOrder.OrderUUID).Return(testOrder, nil)
 

@@ -8,10 +8,10 @@ import (
 var appConfig *config
 
 type config struct {
-	IamGRPC IamGRPCConfig
-	Logger      LoggerConfig
-	Redis RedisConfig
-	Session SessionConfig
+	IamGRPC  IamGRPCConfig
+	Logger   LoggerConfig
+	Redis    RedisConfig
+	Session  SessionConfig
 	Postgres PostgresConfig
 }
 
@@ -47,11 +47,11 @@ func Load(path ...string) error {
 	}
 
 	appConfig = &config{
-		IamGRPC:     IamGRPCConfig,
-		Logger:      loggerConfig,
+		IamGRPC:  IamGRPCConfig,
+		Logger:   loggerConfig,
 		Postgres: postgresConfig,
-		Redis: redisConfig,
-		Session: sessionConfig,
+		Redis:    redisConfig,
+		Session:  sessionConfig,
 	}
 
 	return nil

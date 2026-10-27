@@ -104,7 +104,7 @@ func (c *client) HGetAll(ctx context.Context, key string) ([]any, error) {
 	return values, err
 }
 
-func (c *client) HGet(ctx context.Context, key string, field string) (any, error) {
+func (c *client) HGet(ctx context.Context, key, field string) (any, error) {
 	var val any
 	err := c.withConn(ctx, func(ctx context.Context, conn redigo.Conn) error {
 		result, err := conn.Do("HGET", key, field)
@@ -125,7 +125,7 @@ func (c *client) HSetEx(ctx context.Context, key string, values any, expiration 
 		if err != nil {
 			return err
 		}
-		
+
 		return nil
 	})
 }
@@ -137,7 +137,7 @@ func (c *client) HKeys(ctx context.Context, key string) ([]any, error) {
 		if err != nil {
 			return err
 		}
-		
+
 		values = result
 		return nil
 	})
@@ -145,7 +145,7 @@ func (c *client) HKeys(ctx context.Context, key string) ([]any, error) {
 	return values, err
 }
 
-func (c *client) HExists(ctx context.Context, key string, field string) (bool, error) {
+func (c *client) HExists(ctx context.Context, key, field string) (bool, error) {
 	var exists bool
 	err := c.withConn(ctx, func(ctx context.Context, conn redigo.Conn) error {
 		val, err := redigo.Bool(conn.Do("HEXISTS", key, field))

@@ -4,6 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	api "inventory/internal/api/inventory/v1"
 	clientInterface "inventory/internal/client/grpc"
 	iamClient "inventory/internal/client/grpc/iam/v1"
@@ -13,15 +18,9 @@ import (
 	"inventory/internal/service"
 	partService "inventory/internal/service/part"
 	"platform/pkg/closer"
+	interceptor "platform/pkg/middleware/grpc"
 	iam_v1 "shared/pkg/proto/iam/v1"
 	inventory_v1 "shared/pkg/proto/inventory/v1"
-	interceptor "platform/pkg/middleware/grpc"
-
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type diContainer struct {
@@ -34,7 +33,7 @@ type diContainer struct {
 	mongoDBClient *mongo.Client
 	mongoDBHandle *mongo.Database
 
-	iamClient clientInterface.IamClient
+	iamClient       clientInterface.IamClient
 	authInterceptor *interceptor.AuthInterceptor
 }
 

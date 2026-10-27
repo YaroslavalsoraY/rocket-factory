@@ -3,11 +3,11 @@ package iam_v1
 import (
 	"context"
 	"errors"
-	"iam/internal/model"
-	iam_v1 "shared/pkg/proto/iam/v1"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"iam/internal/model"
+	iam_v1 "shared/pkg/proto/iam/v1"
 )
 
 func (iam *IamApi) Login(ctx context.Context, req *iam_v1.LoginRequest) (*iam_v1.LoginResponse, error) {
