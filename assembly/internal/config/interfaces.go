@@ -21,3 +21,8 @@ type LoggerConfig interface {
 	Level() string
 	AsJson() bool
 }
+
+type MetricsConfig interface {
+	ServiceName() string
+	Address() string
+}

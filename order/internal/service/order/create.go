@@ -37,5 +37,7 @@ func (s *service) CreateOrder(ctx context.Context, userUUID string, partsUUIDs [
 		return "", 0, err
 	}
 
+	s.orders.Add(ctx, 1)
+
 	return orderUUID, totalPrice, nil
 }

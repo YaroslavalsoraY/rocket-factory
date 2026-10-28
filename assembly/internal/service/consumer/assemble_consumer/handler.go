@@ -35,5 +35,7 @@ func (s *service) OrderHandler(ctx context.Context, msg kafka.Message) error {
 		return err
 	}
 
+	s.shipAssemblingTime.Record(ctx, buildTimeSec)
+
 	return nil
 }

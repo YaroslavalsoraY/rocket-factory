@@ -38,6 +38,8 @@ func (s *service) PayOrder(ctx context.Context, orderUUID, userUUID string, paym
 		return "", err
 	}
 
+	s.revenue.Add(ctx, order.TotalPrice)
+
 	s.orderPaidProducerService.ProduceOrderPaid(ctx, model.OrderPaid{
 		EventUUID:       uuid.New().String(),
 		OrderUUID:       order.OrderUUID,

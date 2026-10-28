@@ -2,15 +2,23 @@ package app
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"net/http"
+	"time"
 
 	"assembly/internal/config"
-	"go.uber.org/zap"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
+	"platform/pkg/metrics"
+
+	"go.uber.org/zap"
 )
 
 type App struct {
-	diContainer *diContainer
+	diContainer    *diContainer
+	metricsHandler http.Handler
+	metricsServer  *http.Server
 }
 
 func New(ctx context.Context) (*App, error) {
@@ -25,14 +33,20 @@ func New(ctx context.Context) (*App, error) {
 }
 
 func (a *App) Run(ctx context.Context) error {
-	errCh := make(chan error, 1)
+	errCh := make(chan error, 2)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	go func() {
-		if err := a.runConsumer(ctx); err != nil {
-			logger.Error(ctx, "Consumer runnig error", zap.Error(err))
+		if err := a.runConsumer(ctx); err != nil && ctx.Err() == nil {
+			errCh <- fmt.Errorf("consumer: %w", err)
+		}
+	}()
+
+	go func() {
+		if err := a.runMetricsServer(ctx); err != nil {
+			errCh <- fmt.Errorf("metrics HTTP server: %w", err)
 		}
 	}()
 
@@ -40,9 +54,7 @@ func (a *App) Run(ctx context.Context) error {
 	case <-ctx.Done():
 		logger.Info(ctx, "Shutdown signal received")
 	case err := <-errCh:
-		logger.Error(ctx, "Consumer crashed, shutting down", zap.Error(err))
-		cancel()
-		<-ctx.Done()
+		logger.Error(ctx, "Component crashed, shutting down", zap.Error(err))
 		return err
 	}
 
@@ -54,6 +66,8 @@ func (a *App) initDeps(ctx context.Context) error {
 		a.initDi,
 		a.initLogger,
 		a.initCloser,
+		a.initMetrics,
+		a.initMetricsServer,
 	}
 
 	for _, f := range inits {
@@ -83,6 +97,19 @@ func (a *App) initCloser(_ context.Context) error {
 	return nil
 }
 
+func (a *App) initMetrics(_ context.Context) error {
+	handler, err := metrics.InitProvider("assembly")
+	if err != nil {
+		return err
+	}
+
+	a.metricsHandler = handler
+
+	closer.AddNamed("Metrics", metrics.Shutdown)
+
+	return nil
+}
+
 func (a *App) runConsumer(ctx context.Context) error {
 	logger.Info(ctx, "🚀 OrderPaid Kafka consumer running")
 
@@ -92,4 +119,29 @@ func (a *App) runConsumer(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (a *App) initMetricsServer(_ context.Context) error {
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", a.metricsHandler)
+
+	a.metricsServer = &http.Server{
+		Addr:              config.AppConfig().Metrics.Address(),
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+
+	closer.AddNamed("Assembly metrics HTTP", a.metricsServer.Shutdown)
+	return nil
+}
+
+func (a *App) runMetricsServer(ctx context.Context) error {
+	logger.Info(ctx, "Starting Assembly metrics HTTP server", zap.String("address", a.metricsServer.Addr))
+
+	err := a.metricsServer.ListenAndServe()
+	if errors.Is(err, http.ErrServerClosed) {
+		return nil
+	}
+
+	return err
 }

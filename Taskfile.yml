@@ -374,56 +374,56 @@ tasks:
     dir: deploy/compose/core
     cmds:
       - echo "[task] 🚀 Поднимаем core контейнеры"
-      - docker compose up --build --detach
+      - docker --context "${ROCKET_DOCKER_CONTEXT:-default}" compose up --build --detach
 
   down-core:
     desc: Остановить и удалить core контейнеры
     dir: deploy/compose/core
     cmds:
       - echo "[task] 🛑 Останавливаем core контейнеры"
-      - docker compose down
+      - docker --context "${ROCKET_DOCKER_CONTEXT:-default}" compose down
 
   up-inventory:
     desc: Поднять Inventory сервис и все его зависимости
     dir: deploy/compose/inventory
     cmds:
       - echo "[task] 📦 Поднимаем Inventory с зависимостями"
-      - docker compose up --build --detach
+      - docker --context "${ROCKET_DOCKER_CONTEXT:-default}" compose up --build --detach
 
   down-inventory:
     desc: Остановить и удалить Inventory сервис и все его зависимости
     dir: deploy/compose/inventory
     cmds:
       - echo "[task] 🛑 Останавливаем Inventory с зависимостями"
-      - docker compose down
+      - docker --context "${ROCKET_DOCKER_CONTEXT:-default}" compose down
 
   up-order:
     desc: Поднять Order сервис и все его зависимости
     dir: deploy/compose/order
     cmds:
       - echo "[task] 📦 Поднимаем Order с зависимостями"
-      - docker compose up --build --detach
+      - docker --context "${ROCKET_DOCKER_CONTEXT:-default}" compose up --build --detach
 
   down-order:
     desc: Остановить и удалить Order сервис и все его зависимости
     dir: deploy/compose/order
     cmds:
       - echo "[task] 🛑 Останавливаем Order с зависимостями"
-      - docker compose down
+      - docker --context "${ROCKET_DOCKER_CONTEXT:-default}" compose down
 
   up-iam:
     desc: Поднять IAM сервис и все его зависимости
     dir: deploy/compose/iam
     cmds:
       - echo "[task] 🔐 Поднимаем IAM с зависимостями"
-      - docker compose up --build --detach
+      - docker --context "${ROCKET_DOCKER_CONTEXT:-default}" compose up --build --detach
 
   down-iam:
     desc: Остановить и удалить IAM сервис и все его зависимости
     dir: deploy/compose/iam
     cmds:
       - echo "[task] 🛑 Останавливаем IAM с зависимостями"
-      - docker compose down
+      - docker --context "${ROCKET_DOCKER_CONTEXT:-default}" compose down
 
   up-all:
     desc: Поднять все сервисы по очереди вместе с зависимостями
@@ -436,10 +436,10 @@ tasks:
   down-all:
     desc: Остановить и удалить все сервисы по очереди вместе с зависимостями
     cmds:
-      - task down-core
-      - task down-inventory
-      - task down-order
       - task down-iam
+      - task down-order
+      - task down-inventory
+      - task down-core
 
   grpcurl:install:
     desc: "Устанавливает grpcurl в каталог bin"
@@ -853,7 +853,7 @@ tasks:
         echo "✅ envsubst установлен: {{.ENVSUBST}}"
 
   env:generate:
-    desc: "Генерирует .env сервисов и конфигурацию Collector из шаблонов"
+    desc: "Генерирует .env сервисов и конфигурации Collector и Prometheus из шаблонов"
     deps: [ env:install-envsubst ]
     cmds:
       - |

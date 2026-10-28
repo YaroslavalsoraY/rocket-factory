@@ -11,6 +11,8 @@ import (
 	assebmle_consumer "assembly/internal/service/consumer/assemble_consumer"
 	"assembly/internal/service/producer/order_producer"
 	"github.com/IBM/sarama"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
 	"platform/pkg/closer"
 	"platform/pkg/kafka"
 	"platform/pkg/kafka/consumer"
@@ -29,6 +31,8 @@ type diContainer struct {
 	orderPaidDecoder      kafkaConverter.OrderPaidDecoder
 	syncProducer          sarama.SyncProducer
 	shipAssembledProducer kafka.Producer
+
+	shipAssemblingTime metric.Int64Histogram
 }
 
 func NewDiContainer() *diContainer {
@@ -45,7 +49,11 @@ func (d *diContainer) ProducerService() service.ProducerService {
 
 func (d *diContainer) ConsumerService() service.ConsumerService {
 	if d.consumerService == nil {
-		d.consumerService = assebmle_consumer.NewService(d.OrderPaidConsumer(), d.OrderPaidDecoder(), d.ProducerService())
+		d.consumerService = assebmle_consumer.NewService(d.OrderPaidConsumer(),
+			d.OrderPaidDecoder(),
+			d.ProducerService(),
+			d.ShipAssemblingTime(),
+		)
 	}
 
 	return d.consumerService
@@ -123,4 +131,16 @@ func (d *diContainer) ShipAssembledProducer() kafka.Producer {
 	}
 
 	return d.shipAssembledProducer
+}
+
+func (di *diContainer) ShipAssemblingTime() metric.Int64Histogram {
+	if di.shipAssemblingTime == nil {
+		counter, err := otel.Meter("assembly").Int64Histogram("assembly_duration", metric.WithUnit("s"))
+		if err != nil {
+			panic(fmt.Errorf("assembling time: %w", err))
+		}
+		di.shipAssemblingTime = counter
+	}
+
+	return di.shipAssemblingTime
 }

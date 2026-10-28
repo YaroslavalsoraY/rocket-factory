@@ -12,6 +12,7 @@ type config struct {
 	Logger        LoggerConfig
 	KafkaProducer KafkaProducerConfig
 	KafkaConsumer KafkaConsumerConfig
+	Metrics       MetricsConfig
 }
 
 func Load(path ...string) error {
@@ -40,11 +41,17 @@ func Load(path ...string) error {
 		return err
 	}
 
+	metrics, err := env.NewMetricsConfig()
+	if err != nil {
+		return err
+	}
+
 	appConfig = &config{
 		Kafka:         kafka,
 		KafkaProducer: kafkaProducer,
 		KafkaConsumer: kafkaConsumer,
 		Logger:        logger,
+		Metrics:       metrics,
 	}
 
 	return nil

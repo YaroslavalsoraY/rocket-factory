@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	"go.opentelemetry.io/otel/metric/noop"
 	clientMocks "order/internal/client/grpc/mocks"
 	repositoryMock "order/internal/repository/mocks"
 	kafkaMocks "order/internal/service/mocks"
@@ -42,6 +43,8 @@ func (s *ServiceSuite) SetupTest() {
 		s.inventoryClient,
 		s.paymentClient,
 		s.orderProducer,
+		noop.Int64Counter{},
+		noop.Float64Counter{},
 	)
 }
 

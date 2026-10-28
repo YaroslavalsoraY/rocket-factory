@@ -160,6 +160,10 @@ task test-e2e
 
 Для генерации окружения используйте утилиту `deploy/env/generate-env.sh`.
 
+После `task up-core` Grafana доступна по адресу http://localhost:3000. Логин и пароль задаются переменными `CORE_GRAFANA_ADMIN_USER` и `CORE_GRAFANA_ADMIN_PASSWORD` в `deploy/env/.env`. Prometheus добавляется как источник данных автоматически.
+
+Задачи `up-*` и `down-*` используют системный Docker context `default`, чтобы запуск не зависел от Docker Desktop. Для другого Engine задайте `ROCKET_DOCKER_CONTEXT`, например `ROCKET_DOCKER_CONTEXT=desktop-linux task up-all`.
+
 ## Архитектурные особенности
 
 - Микросервисная архитектура на Go с модульным `go.work`.

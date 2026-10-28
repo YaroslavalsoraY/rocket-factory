@@ -34,7 +34,12 @@ process_template() {
 
   if [ "$service" = "core" ]; then
     local required_key
-    for required_key in CORE_ELASTICSEARCH_HOST CORE_ELASTICSEARCH_PORT CORE_ELASTICSEARCH_HEAP_SIZE CORE_ELASTICSEARCH_LOGS_INDEX CORE_KIBANA_HOST CORE_KIBANA_PORT; do
+    for required_key in \
+      CORE_ELASTICSEARCH_HOST CORE_ELASTICSEARCH_PORT CORE_ELASTICSEARCH_HEAP_SIZE \
+      CORE_ELASTICSEARCH_LOGS_INDEX CORE_KIBANA_HOST CORE_KIBANA_PORT \
+      CORE_PROMETHEUS_PORT CORE_PROMETHEUS_SCRAPE_INTERVAL \
+      CORE_PROMETHEUS_EVALUATION_INTERVAL ORDER_HTTP_PORT ASSEMBLY_METRICS_PORT \
+      CORE_GRAFANA_PORT CORE_GRAFANA_ADMIN_USER CORE_GRAFANA_ADMIN_PASSWORD; do
       if [ -z "${!required_key:-}" ]; then
         echo "❌ Укажите $required_key в $SCRIPT_DIR/.env"
         return 1
@@ -72,6 +77,22 @@ process_template() {
         return 1
       fi
       echo "✅ Создан файл $otel_output"
+    fi
+
+    local prometheus_template="$COMPOSE_DIR/core/prometheus/prometheus.template.yml"
+    local prometheus_output="$COMPOSE_DIR/core/prometheus/prometheus.yml"
+
+    if [ -f "$prometheus_template" ]; then
+      if ! (
+        set -a
+        source "$output"
+        set +a
+        "$ENV_SUBST" < "$prometheus_template" > "$prometheus_output"
+      ); then
+        echo "❌ Не удалось создать $prometheus_output"
+        return 1
+      fi
+      echo "✅ Создан файл $prometheus_output"
     fi
   fi
 }

@@ -12,7 +12,7 @@ services: # Раздел, в котором описываются все кон
       - "${OTEL_GRPC_PORT}:4317" # Порт для протокола OTLP gRPC
       - "${OTEL_HTTP_PORT}:4318" # Порт для протокола OTLP HTTP
       - "8888:8888" # Порт для метрик самого коллектора
-      - "8889:8889" # Порт для расширения zpages (дебаг)
+      - "${OTEL_ZPAGES_PORT}:55679" # Порт для расширения zpages (дебаг)
     restart: unless-stopped
     # Автоматически перезапускаем контейнер при сбоях, но не при ручной остановке
     networks:
@@ -24,6 +24,41 @@ services: # Раздел, в котором описываются все кон
       elasticsearch:
         condition: service_healthy
       # Коллектор экспортирует трейсы в Jaeger, а логи в Elasticsearch
+
+  prometheus: # Собирает метрики сервисов через HTTP /metrics
+    image: prom/prometheus:v3.3.1
+    container_name: prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Доступ к Go-сервисам, запущенным на хосте
+    restart: unless-stopped
+    networks:
+      - microservices-net
+
+  grafana: # Веб-интерфейс для просмотра метрик Prometheus
+    image: grafana/grafana:12.4.11
+    container_name: grafana
+    ports:
+      - "${GRAFANA_PORT}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - microservices-net
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.0.4
@@ -250,6 +285,8 @@ services: # Раздел, в котором описываются все кон
       # Подключаем контейнер к общей сети, в которой живут все сервисы микросервисной архитектуры
 
 volumes: # Раздел с определением томов
+  prometheus_data: # Сохраняет метрики между перезапусками Prometheus
+  grafana_data: # Сохраняет настройки и пользователей Grafana
   elasticsearch_data:
   kafka_data: # Именованный том для хранения данных Kafka
 

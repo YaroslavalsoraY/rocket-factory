@@ -13,14 +13,16 @@ import (
 	"order/internal/config"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
+	"platform/pkg/metrics"
 	"platform/pkg/migrator/pg"
 	"platform/pkg/tracing"
 	order_v1 "shared/pkg/openapi/order/v1"
 )
 
 type App struct {
-	diContainer *diContainer
-	httpServer  *http.Server
+	diContainer    *diContainer
+	httpServer     *http.Server
+	metricsHandler http.Handler
 }
 
 func New(ctx context.Context) (*App, error) {
@@ -78,6 +80,7 @@ func (a *App) initDeps(ctx context.Context) error {
 		a.initLogger,
 		a.initCloser,
 		a.InitTracer,
+		a.initMetrics,
 		a.initHttpServer,
 		a.initMigrations,
 	}
@@ -94,6 +97,19 @@ func (a *App) initDeps(ctx context.Context) error {
 
 func (a *App) initDi(_ context.Context) error {
 	a.diContainer = NewDiContainer()
+	return nil
+}
+
+func (a *App) initMetrics(ctx context.Context) error {
+	handler, err := metrics.InitProvider(config.AppConfig().OtelTracer.ServiceName())
+	if err != nil {
+		return err
+	}
+
+	a.metricsHandler = handler
+
+	closer.AddNamed("Metrics", metrics.Shutdown)
+
 	return nil
 }
 
@@ -135,9 +151,13 @@ func (a *App) initHttpServer(ctx context.Context) error {
 
 	r.Mount("/", orderServer)
 
+	root := http.NewServeMux()
+	root.Handle("/metrics", a.metricsHandler)
+	root.Handle("/", otelhttp.NewHandler(r, "order.http"))
+
 	server := &http.Server{
 		Addr:              config.AppConfig().OrderHttp.HttpAdress(),
-		Handler:           otelhttp.NewHandler(r, "order.http"),
+		Handler:           root,
 		ReadHeaderTimeout: config.AppConfig().OrderHttp.HeaderTimeout(),
 	}
 

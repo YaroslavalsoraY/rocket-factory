@@ -6,6 +6,8 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	api "order/internal/api/order/v1"
@@ -56,6 +58,9 @@ type diContainer struct {
 
 	iamClient      client.IamClient
 	authMiddleware *authMiddleware.AuthMiddleware
+
+	ordersCounter metric.Int64Counter
+	ordersRevenue metric.Float64Counter
 }
 
 func NewDiContainer() *diContainer {
@@ -72,7 +77,14 @@ func (di *diContainer) OrderRepository(ctx context.Context) repository.OrderRepo
 
 func (di *diContainer) OrderService(ctx context.Context) service.OrderService {
 	if di.orderService == nil {
-		di.orderService = orderService.NewService(di.OrderRepository(ctx), di.InventoryClient(ctx), di.PaymentClient(ctx), di.ProducerService())
+		di.orderService = orderService.NewService(
+			di.OrderRepository(ctx),
+			di.InventoryClient(ctx),
+			di.PaymentClient(ctx),
+			di.ProducerService(),
+			di.OrdersCounter(),
+			di.OrdersRevenue(),
+		)
 	}
 
 	return di.orderService
@@ -258,6 +270,30 @@ func (di *diContainer) IamClient() client.IamClient {
 	}
 
 	return di.iamClient
+}
+
+func (di *diContainer) OrdersCounter() metric.Int64Counter {
+	if di.ordersCounter == nil {
+		counter, err := otel.Meter("order").Int64Counter("orders")
+		if err != nil {
+			panic(fmt.Errorf("create orders counter: %w", err))
+		}
+		di.ordersCounter = counter
+	}
+
+	return di.ordersCounter
+}
+
+func (di *diContainer) OrdersRevenue() metric.Float64Counter {
+	if di.ordersRevenue == nil {
+		counter, err := otel.Meter("order").Float64Counter("orders_revenue")
+		if err != nil {
+			panic(fmt.Errorf("create orders revenue counter: %w", err))
+		}
+		di.ordersRevenue = counter
+	}
+
+	return di.ordersRevenue
 }
 
 func (di *diContainer) AuthMiddleware() *authMiddleware.AuthMiddleware {

@@ -5,6 +5,7 @@ import (
 
 	kafkaConverter "assembly/internal/converter/kafka"
 	def "assembly/internal/service"
+	"go.opentelemetry.io/otel/metric"
 	"go.uber.org/zap"
 	"platform/pkg/kafka"
 	"platform/pkg/logger"
@@ -14,13 +15,20 @@ type service struct {
 	orderPaidConsumer     kafka.Consumer
 	orderPaidDecoder      kafkaConverter.OrderPaidDecoder
 	shipAssembledProducer def.ProducerService
+
+	shipAssemblingTime metric.Int64Histogram
 }
 
-func NewService(orderPaidConsumer kafka.Consumer, orderPaidDecoder kafkaConverter.OrderPaidDecoder, shipAssembledProducer def.ProducerService) *service {
+func NewService(orderPaidConsumer kafka.Consumer,
+	orderPaidDecoder kafkaConverter.OrderPaidDecoder,
+	shipAssembledProducer def.ProducerService,
+	shipAssemblingTime metric.Int64Histogram,
+) *service {
 	return &service{
 		orderPaidConsumer:     orderPaidConsumer,
 		orderPaidDecoder:      orderPaidDecoder,
 		shipAssembledProducer: shipAssembledProducer,
+		shipAssemblingTime:    shipAssemblingTime,
 	}
 }
 
