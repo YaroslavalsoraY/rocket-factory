@@ -8,11 +8,10 @@ import (
 	"time"
 
 	"assembly/internal/config"
+	"go.uber.org/zap"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
 	"platform/pkg/metrics"
-
-	"go.uber.org/zap"
 )
 
 type App struct {

@@ -36,11 +36,28 @@ services: # Раздел, в котором описываются все кон
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
+      - ./prometheus/rules:/etc/prometheus/rules:ro
     extra_hosts:
       - "host.docker.internal:host-gateway" # Доступ к Go-сервисам, запущенным на хосте
     restart: unless-stopped
     networks:
       - microservices-net
+
+  alertmanager:
+    image: prom/alertmanager:v0.34.1
+    container_name: alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+    ports:
+      - "${ALERTMANAGER_PORT}:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    restart: unless-stopped
+    networks:
+      - microservices-net
+    secrets:
+      - telegram_bot_token
+      - telegram_chat_id
 
   grafana: # Веб-интерфейс для просмотра метрик Prometheus
     image: grafana/grafana:12.4.11
@@ -283,6 +300,12 @@ services: # Раздел, в котором описываются все кон
     networks:
       - microservices-net
       # Подключаем контейнер к общей сети, в которой живут все сервисы микросервисной архитектуры
+
+secrets:
+  telegram_bot_token:
+    environment: ALERTMANAGER_TELEGRAM_BOT_TOKEN
+  telegram_chat_id:
+    environment: ALERTMANAGER_TELEGRAM_CHAT_ID
 
 volumes: # Раздел с определением томов
   prometheus_data: # Сохраняет метрики между перезапусками Prometheus

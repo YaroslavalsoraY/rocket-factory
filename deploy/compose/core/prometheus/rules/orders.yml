@@ -1,0 +1,7 @@
+groups:
+  - name: orders
+    rules:
+      - alert: TooManyOrders
+        expr: sum(increase(orders_total[1m])) > 10
+        annotations:
+          summary: "Более 10 заказов за минуту"
